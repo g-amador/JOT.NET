@@ -20,20 +20,20 @@ The goal of JOT.NET is not to become the largest engine, but to remain understan
 
 ## 📚 <a name="toc"></a> Table of Contents
 
-1. # 📜 Origins
-2. # ⚙️ Installation
-3. # 🚀 Usage
-4. # 🏗️ Architecture
-5. # 📖 Core Principles
-6. # 🌐 MMO-First Philosophy
-7. # 🌍 Browser Client Strategy
-8. # 🧩 Layer Responsibilities
-9. # 📂 Project Organization
-10. # 🧪 Templates and Examples
-11. # 🛠️ Technology Stack
-12. # 🗺️ Roadmap
-13. # 📬 Contact & Usage Notice
-14. # ✅ Final Rule
+1. [📜 Origins](#origins)
+2. [⚙️ Installation](#origins)
+3. [🚀 Usage](#origins)
+4. [🏗️ Architecture](#origins)
+5. [📖 Core Principles](#origins)
+6. [🌐 MMO-First Philosophy](#origins)
+7. [🌍 Browser Client Strategy](#origins)
+8. [🧩 Layer Responsibilities](#origins)
+9. [📂 Project Organization](#origins)
+10. [🧪 Templates and Examples](#origins)
+11. [🛠️ Technology Stack](#origins)
+12. [🗺️ Roadmap](#origins)
+13. [📬 Contact & Usage Notice](#origins)
+14. [✅ Final Rule](#origins)
 
 ---
 
