@@ -564,22 +564,21 @@ Architectural principles must not.
 
 JOT.NET is released under the Apache License 2.0.
 
-You are free to:
-
-- Use
-- Modify
-- Distribute
-- Extend
-- Port
-
-the engine in accordance with the license.
+You are free to use, modify, distribute, and build upon JOT.NET, including creating your own templates, demos, games, extensions, tools, or ports.
 
 Please keep the following in mind:
 
-- Do not claim authorship of JOT or JOT.NET.
-- If you create games, extensions, demos, templates, or ports, I would be delighted to hear about them.
+- You may not claim authorship of JOT or JOT.NET.
+- If you extend the engine, create templates, demos, games, or port the engine to another language, I would be delighted to hear about it.
+- Contributions, feedback, bug reports, and architectural discussions are always welcome.
+
+For full legal details, please refer to the LICENSE file.
+
+If you have questions, suggestions, or want to share your work:
 
 📧 **g.n.p.amador@gmail.com**
+
+Good luck, and have fun building with JOT.NET!
 
 🔝 #toc
 
