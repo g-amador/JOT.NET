@@ -1,7 +1,6 @@
 # 🎮 JOT.NET
 
 <p align="center">
-  <img src="docs/images/jot-logo.pngalign="center">
   <strong>A Modular Multi-purpose Game Engine for .NET</strong>
 </p>
 
