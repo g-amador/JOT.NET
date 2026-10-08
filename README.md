@@ -18,27 +18,66 @@ The goal of JOT.NET is not to become the largest engine, but to remain understan
 
 ---
 
-<a id="table-of-contents"></a>
+## 📚 <a name="toc"></a> Table of Contents
 
-# 📚 Table of Contents
-
-- #️-installation
-- #-usage
-- #️-architecture
-- #-core-principles
-- #-mmo-first-philosophy
-- #-browser-client-strategy
-- #-layer-responsibilities
-- #-project-organization
-- #-templates-and-examples
-- [️-technology-stack
-- [️-roadmap
-- [-contact--license-notice
-- [-final-rule
+1. #origins
+2. #installation
+3. #usage
+4. #architecture
+5. #core-principles
+6. #mmo-first-philosophy
+7. #browser-client-strategy
+8. #layer-responsibilities
+9. #project-organization
+10. #templates-and-examples
+11. #technology-stack
+12. #roadmap
+13. #contact
+14. #final-rule
 
 ---
 
-# ⚙️ Installation
+## 📜 <a name="origins"></a> Origins
+
+JOT.NET is a modern C#/.NET reimplementation of the original JOT (Just One Thing) Modular Multi-purpose Game Engine, preserving its modular architecture while adopting contemporary technologies and development practices.
+
+The original JOT project was created as a modular game engine for experimentation, education, research, and massively multiplayer online games. Its layered architecture remains the foundation of JOT.NET today. GitHub - g-amador/JOT: JOT: A Modular Multi-purpose Game Engine
+
+## Original Project
+
+- GitHub Repository: https://github.com/g-amador/JOT
+- Original Engine: JOT: A Modular Multi-purpose Game Engine
+- Research Paper: JOT: A Modular Multi-purpose Minimalistic Massively Multiplayer Online Game Engine 【2-1a2a36】【3-e90429】
+
+## What Carries Forward
+
+JOT.NET preserves the core principles that made the original engine unique:
+
+- Layered architecture
+- Modular design
+- Replaceable subsystems
+- Core versus Toolkit separation
+- Framework abstraction layer
+- MMO-oriented design philosophy
+
+## What Has Changed
+
+JOT.NET modernizes the original technology stack while preserving the architectural concepts.
+
+| Original JOT (Java) | JOT.NET (C#/.NET) |
+|---------------------|-------------------|
+| JOGL / JogAmp | Silk.NET |
+| Apache Commons Math | System.Numerics |
+| Assimp Java Bindings | AssimpNet |
+| JGroups | DotNetty |
+| NetBeans | Visual Studio / VS Code / Rider |
+| Maven | .NET SDK / NuGet |
+
+The goal of JOT.NET is not simply to translate Java code into C#, but to redesign the engine around modern .NET technologies while remaining faithful to the architecture, modularity, and educational value of the original project.
+
+---
+
+## ⚙️ <a name="installation"></a> Installation
 
 ## Prerequisites
 
@@ -124,11 +163,11 @@ dotnet restore
 dotnet build
 ```
 
-🔝 #table-of-contents
+🔝 #toc
 
 ---
 
-# 🚀 Usage
+## 🚀 <a name="usage"></a> Usage
 
 ## Core Template
 
@@ -184,11 +223,11 @@ Example:
 dotnet run --project demos/examples/rendering-showcase
 ```
 
-🔝 #table-of-contents
+🔝 #toc
 
 ---
 
-# 🏗️ Architecture
+## 🏗️ <a name="architecture"></a> Architecture
 
 <p align="center">
   docs/images/architecture.png
@@ -213,11 +252,11 @@ Benefits:
 - Maintainability
 - Scalability
 
-🔝 #table-of-contents
+🔝 #toc
 
 ---
 
-# 📖 Core Principles
+## 📖 <a name="core-principles"></a> Core Principles
 
 ## Everything Is Replaceable
 
@@ -301,11 +340,11 @@ Examples:
 - State Management
 - GUI Systems
 
-🔝 #table-of-contents
+🔝 #toc
 
 ---
 
-# 🌐 MMO-First Philosophy
+## 🌐 <a name="mmo-first-philosophy"></a> MMO-First Philosophy
 
 JOT.NET is designed with multiplayer support from the very beginning.
 
@@ -319,11 +358,11 @@ Key considerations:
 
 Single-player is treated as a special case of multiplayer.
 
-🔝 #table-of-contents
+🔝 #toc
 
 ---
 
-# 🌍 Browser Client Strategy
+## 🌍 <a name="browser-client-strategy"></a> Browser Client Strategy
 
 Desktop is the primary target.
 
@@ -343,11 +382,11 @@ Desktop Client
  Browser Client
 ```
 
-🔝 #table-of-contents
+🔝 #toc
 
 ---
 
-# 🧩 Layer Responsibilities
+## 🧩 <a name="layer-responsibilities"></a> Layer Responsibilities
 
 ```text
 ┌─────────────────────────┐
@@ -401,11 +440,11 @@ Desktop Client
 - GUI
 - Application Management
 
-🔝 #table-of-contents
+🔝 #toc
 
 ---
 
-# 📂 Project Organization
+## 📂 <a name="project-organization"></a> Project Organization
 
 ```text
 JOT.NET/
@@ -429,11 +468,11 @@ JOT.NET/
 └── README.md
 ```
 
-🔝 #table-of-contents
+🔝 #toc
 
 ---
 
-# 🧪 Templates and Examples
+## 🧪 <a name="templates-and-examples"></a> Templates and Examples
 
 ## Core Template
 
@@ -461,11 +500,11 @@ Examples may include:
 - AI Showcase
 - MMO Prototype
 
-🔝 #table-of-contents
+🔝 #toc
 
 ---
 
-# 🛠️ Technology Stack
+## 🛠️ <a name="technology-stack"></a> Technology Stack
 
 | Purpose | Technology |
 |----------|------------|
@@ -479,11 +518,11 @@ Technologies may evolve.
 
 Architectural principles must not.
 
-🔝 #table-of-contents
+🔝 #toc
 
 ---
 
-# 🗺️ Roadmap
+## 🗺️ <a name="roadmap"></a> Roadmap
 
 ## Phase 1
 
@@ -517,11 +556,11 @@ Architectural principles must not.
 - MMO Prototype
 - Browser Client
 
-🔝 #table-of-contents
+🔝 #toc
 
 ---
 
-# 📜 Contact & License Notice
+## 📬 <a name="contact"></a> Contact & Usage Notice
 
 JOT.NET is released under the Apache License 2.0.
 
@@ -542,11 +581,11 @@ Please keep the following in mind:
 
 📧 **g.n.p.amador@gmail.com**
 
-🔝 #table-of-contents
+🔝 #toc
 
 ---
 
-# ✅ Final Rule
+## ✅ <a name="final-rule"></a> Final Rule
 
 When choosing between two designs, prefer the one that:
 
@@ -562,4 +601,4 @@ If a feature does not belong in Core, it belongs in a Toolkit or outside the eng
 >
 > **JOT.NET is built to be the engine that can be understood, modified, and rebuilt.**
 
-🔝 #table-of-contents
+🔝 #toc
