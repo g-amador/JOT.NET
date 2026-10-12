@@ -52,39 +52,6 @@ Every feature added to the engine should support one or more of these goals.
 
 ---
 
-### 🧩 Layered Architecture
-
-```text
-Framework
-    ↓
-Toolkits
-    ↓
-Core
-    ↓
-Infrastructure
-```
-
-Each layer depends only on itself or lower layers.
-
-### ♻️ Replaceable Components
-
-Major subsystems are designed to be replaced or reimplemented without affecting the rest of the engine.
-
-### 🌐 MMO-Oriented
-
-Networking is treated as a first-class concern rather than an afterthought.
-
-### 🖥️ Multi-Client Strategy
-
-JOT.NET targets both:
-
-- Desktop applications
-- Browser-based clients
-
-through a shared engine architecture.
-
----
-
 ## 📚 Table of Contents
 
 1. #-origins
