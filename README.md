@@ -55,22 +55,22 @@ Every feature added to the engine should support one or more of these goals.
 ## 📑 <a name="toc">Table of Contents
 
 1. [📜 Origins](#origins)
-2. [📜 Origins](#architecture-overview)
-3. [📜 Origins](#core-principles)
-4. [📜 Origins](#mmo-first-philosophy)
-5. [📜 Origins](#browser-client-strategy)
-6. [📜 Origins](#layer-responsibilities)
-7. [📜 Origins](#project-organization)
-8. [📜 Origins](#️installation)
-9. [📜 Origins](#usage)
-10. [📜 Origins](#templates-and-examples)
-11. [📜 Origins](#Contributing)
-12. [📜 Origins](#License)
-13. [📜 Origins](#contact--usage-notice)
+2. [🏗️ Architecture Overview](#architecture-overview)
+3. [📖 Core Principles](#core-principles)
+4. [🌐 MMO-First Philosophy](#mmo-first-philosophy)
+5. [🌍 Browser Client Strategy](#browser-client-strategy)
+6. [🧩 Layer Responsibilities](#layer-responsibilities)
+7. [](#project-organization)
+8. [⚙️ Installation](#️installation)
+9. [🚀 Usage](#usage)
+10. [🧪 Templates and Examples](#templates-and-examples)
+11. [🤝 Contributing](#contributing)
+12. [📄 License](#license)
+13. [📬 Contact & Usage Notice](#contact--usage-notice)
 
 ---
 
-## 📜 <a name="-origins">Origins
+## 📜 <a name="origins">Origins
 
 JOT.NET is a modern C#/.NET reimplementation of the original Java-based JOT (Just One Thing) Modular Multi-purpose Game Engine.
 
@@ -119,11 +119,11 @@ Instead, the project uses the original architecture as a foundation while taking
 
 This approach allows the engine to evolve independently while preserving the ideas that made the original JOT unique.
 
-#toc
+[Back to Table of Contents](#toc)
 
 ---
 
-## 🏗️ Architecture Overview
+## 🏗️ <a name="architecture-overview">Architecture Overview
 
 JOT.NET follows a layered architecture:
 
@@ -141,11 +141,11 @@ Dependencies always flow downward.
 - No cross-layer shortcuts
 - External libraries are isolated in Infrastructure
 
-#toc
+[Back to Table of Contents](#toc)
 
 ---
 
-## 📖 Core Principles
+## 📖 <a name="core-principles">Core Principles
 
 The architecture of JOT.NET is guided by a small set of fundamental principles.
 
@@ -308,11 +308,11 @@ Current technologies include:
 
 Future technologies may replace some of these choices, but the core principles of modularity, replaceability, educational value, and clean dependency flow should remain unchanged.
 
-#toc
+[Back to Table of Contents](#toc)
 
 ---
 
-## 🌐 MMO-First Philosophy
+## 🌐 <a name="#mmo-first-philosophy">MMO-First Philosophy
 
 Networking is not an afterthought in JOT.NET.
 
@@ -352,11 +352,11 @@ Being MMO-first does not mean being MMO-only.
 
 Single-player games remain first-class citizens and can be developed using exactly the same architecture and tools.
 
-#toc
+[Back to Table of Contents](#toc)
 
 ---
 
-## 🌍 Browser Client Strategy
+## 🌍 <a name="browser-client-strategy">Browser Client Strategy
 
 JOT.NET aims to support both desktop and browser-based applications through a shared engine architecture.
 
@@ -370,11 +370,11 @@ The objective is to maximize code reuse between desktop and browser clients whil
 
 Browser support is considered a strategic goal of the project and an important step toward making JOT.NET available across a wider range of platforms.
 
-#toc
+[Back to Table of Contents](#toc)
 
 ---
 
-## 🧩 Layer Responsibilities
+## 🧩 <a name="layer-responsibilities">Layer Responsibilities
 
 JOT.NET is organized into four layers, each with a clearly defined responsibility.
 
@@ -467,11 +467,11 @@ Projects:
 
 The Framework is optional. Applications can be built using only the Infrastructure and Core layers or can leverage Toolkits and Framework for increased productivity.
 
-#toc
+[Back to Table of Contents](#toc)
 
 ---
 
-## ⚙️ Installation
+## ⚙️ <a name="️installation">Installation
 
 ### Prerequisites
 
@@ -517,11 +517,11 @@ dotnet run --project src/demos/templates/CoreTemplate
 
 If the template builds and runs successfully, your environment is correctly configured.
 
-#toc
+[Back to Table of Contents](#toc)
 
 ---
 
-## 🚀 Usage
+## 🚀 <a name="usage">Usage
 
 Run:
 
@@ -532,11 +532,11 @@ or
 dotnet run --project src/demos/templates/FullTemplate
 `
 
-#toc
+[Back to Table of Contents](#toc)
 
 ---
 
-## 🧪 Templates and Examples
+## 🧪 <a name="templates-and-examples">Templates and Examples
 
 JOT.NET provides two official templates that demonstrate different levels of engine usage.
 
@@ -570,11 +570,11 @@ Additional examples will showcase individual engine features, such as:
 - Networking
 - MMO-oriented systems
 
-#toc
+[Back to Table of Contents](#toc)
 
 ---
 
-## 🤝 Contributing
+## 🤝 <a name="contributing">Contributing
 
 Contributions are welcome, including:
 
@@ -588,21 +588,21 @@ When contributing, please respect the layered architecture and keep Core minimal
 
 A dedicated `CONTRIBUTING.md` guide may be provided as the project matures.
 
-#toc
+[Back to Table of Contents](#toc)
 
 ---
 
-## 📄 License
+## 📄 <a name="license">License
 
 JOT.NET is released under the **MIT License**.
 
 See the `LICENSE` file for details.
 
-#toc
+[Back to Table of Contents](#toc)
 
 ---
 
-## 📬 Contact & Usage Notice
+## 📬 <a name="#contact--usage-notice">Contact & Usage Notice
 
 JOT.NET is released under the MIT License.
 
@@ -612,6 +612,6 @@ If you have questions, suggestions, feedback, or would like to share a project b
 
 If you extend JOT.NET, create templates, demos, games, or ports based on it, I would be delighted to hear about it.
 
-#toc
+[Back to Table of Contents](#toc)
 
 ---
