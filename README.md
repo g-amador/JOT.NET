@@ -312,7 +312,7 @@ Future technologies may replace some of these choices, but the core principles o
 
 ---
 
-## 🌐 <a name="#mmo-first-philosophy">MMO-First Philosophy
+## 🌐 <a name="mmo-first-philosophy">MMO-First Philosophy
 
 Networking is not an afterthought in JOT.NET.
 
@@ -602,7 +602,7 @@ See the `LICENSE` file for details.
 
 ---
 
-## 📬 <a name="#contact--usage-notice">Contact & Usage Notice
+## 📬 <a name="contact--usage-notice">Contact & Usage Notice
 
 JOT.NET is released under the MIT License.
 
