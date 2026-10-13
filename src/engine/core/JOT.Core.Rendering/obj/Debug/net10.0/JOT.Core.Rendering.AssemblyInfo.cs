@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("JOT.Core.Rendering")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+567cda87d9d39a9adf109ad532f2f2495a3d8348")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+df2550143254d0df1923915939a3a5941c3d1d66")]
 [assembly: System.Reflection.AssemblyProductAttribute("JOT.Core.Rendering")]
 [assembly: System.Reflection.AssemblyTitleAttribute("JOT.Core.Rendering")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
