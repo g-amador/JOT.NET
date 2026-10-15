@@ -6,4 +6,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+	<PackageReference Include="Silk.NET.Windowing" />
+	<PackageReference Include="Silk.NET.OpenGL" />
+	<PackageReference Include="Silk.NET.Input" />
+  </ItemGroup>
+
 </Project>
