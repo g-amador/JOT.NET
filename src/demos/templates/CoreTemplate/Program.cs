@@ -1,8 +1,12 @@
-﻿using JOT.Infrastructure.Silk.Windowing;
+﻿using JOT.Infrastructure.Silk.Input;
+using JOT.Infrastructure.Silk.Windowing;
 
-var window = new SilkWindow(
-    "JOT.NET",
-    1280,
-    720);
+var window = new SilkWindow("JOT.NET", 1280, 720);
 
-window.Run();
+window.Run(currentWindow =>
+{
+    if (currentWindow.Input.Keyboard.IsKeyPressed(KeyCode.Escape))
+    {
+        currentWindow.Close();
+    }
+});
