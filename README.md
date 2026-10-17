@@ -61,14 +61,15 @@ JOT.NET is designed around the following objectives:
 
 JOT.NET modernizes the original JOT vision—demonstrating that engines can be collections of isolated components rather than monolithic systems. While the conceptual architecture remains faithful to the original research, the technology stack has been updated for the .NET ecosystem.
 
-GitHub Repository: <https://github.com/g-amador/JOT>
-Research Paper: [!JOT – A Modular Multi-purpose Minimalistic Massively Multiplayer Online Game Engine](https://www.researchgate.net/figure/Physics-Extended-Toolkit-Features_fig5_340929625)
+GitHub Repository:  
+Presentation: https://goo.gl/i9eJFy
+Research Paper: https://goo.gl/sGBVQT
 
 | Original JOT (Java) | JOT.NET (.NET) |
 |---------------------|----------------|
 | JOGL / JogAmp	| Silk.NET |
 | Apache Commons Math | System.Numerics |
-| Assimp Java Bindings | AssimpNet |
+| xmlbeans 2.6.0 | AssimpNet |
 | JGroups | DotNetty |
 | NetBeans | VS / VS Code / Rider |
 | Maven	| .NET SDK / NuGet / CPM |
@@ -82,9 +83,7 @@ Research Paper: [!JOT – A Modular Multi-purpose Minimalistic Massively Multipl
 
 JOT.NET employs a strict layered architecture where dependencies only flow downward:
 
-```text
-Framework → Toolkits → Core → Infrastructure
-```
+`Framework` → `Toolkits` → `Core` → `Infrastructure`
 
 ### Core Principles
 
