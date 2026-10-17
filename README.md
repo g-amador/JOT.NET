@@ -33,10 +33,10 @@ JOT.NET is currently **experimental and not production ready**. Current prioriti
 
 JOT.NET is designed around the following objectives:
 
-- ✅ Modular architecture with replaceable subsystems
-- ✅ MMO-first design and browser client support
-- ✅ Educational value and clean dependency flow
-- ✅ Long-term maintainability within the modern .NET ecosystem
+✅ Modular architecture with replaceable subsystems
+✅ MMO-first design and browser client support
+✅ Educational value and clean dependency flow
+✅ Long-term maintainability within the modern .NET ecosystem
 
 ---
 
