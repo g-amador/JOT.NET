@@ -1,0 +1,13 @@
+# Force GitHub Linguist to count C#, Razor, and Prolog files
+*.cs linguist-detectable=true
+*.razor linguist-detectable=true
+
+# Explicitly classify Razor files as C#
+*.razor linguist-language=C#
+
+# Optional: classify .cs files as C# (usually automatic)
+*.cs linguist-language=C#
+
+# Prevent build artifacts from being counted
+bin/* linguist-generated=true
+obj/* linguist-generated=true
