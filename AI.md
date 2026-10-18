@@ -80,6 +80,9 @@ JOT.NET/
         │   │   │   └── JOT.Infrastructure.Numerics.csproj
         │   │   └── JOT.Infrastructure.Silk/
         │   │       ├── JOT.Infrastructure.Silk.csproj
+        │   │       ├── Graphics/
+        │   │       │   ├── IGraphicsContext.cs
+        │   │       │   └── SilkGraphicsContext.cs
         │   │       ├── Input/
         │   │       │   ├── IInputContext.cs
         │   │       │   ├── IKeyboard.cs
@@ -214,55 +217,39 @@ Optional higher-level features:
 
 # ROADMAP
 
-1. Infrastructure
-2. Core
-3. Toolkits
-4. Framework
-5. MMO prototype
-6. Browser client
+Roadmap progress:
+✅ Phase 1 - Infrastructure
+🔄 Phase 2 - Core (Active)
+⬜ Phase 3 - Toolkits
+⬜ Phase 4 - Framework
+⬜ Phase 5 - MMO Prototype
+⬜ Phase 6 - Browser Client
 
-# CURRENT FOCUS
+# CURRENT STATUS
 
 ## Phase 1 — JOT.Infrastructure.Silk
 
-Silk.NET is the initial platform integration. The intended areas are:
+Status: COMPLETED
 
-1. Windowing
-2. Input
-3. Graphics
-4. Timing
+Phase 1 completion criteria have been satisfied:
 
-Current contracts:
+1. Application opens a window.
+2. Graphics initialize successfully.
+3. Background color is displayed.
+4. Keyboard input is processed.
+5. Escape closes the application.
+6. Application exits cleanly.
 
-1. IWindow
-2. IInputContext
-3. IGraphicsContext
-4. ITimer
-
-Current implementations:
-
-1. SilkWindow
-2. SilkInputContext
-3. SilkGraphicsContext
-4. SilkTimer
-
-## Phase 1 Completion Criteria
-
-The phase is complete only when a minimal application can:
-1. Open a window.
-2. Initialize graphics.
-3. Display a background color.
-4. Process keyboard input.
-5. Close with Escape.
-6. Exit cleanly.
-
-And:
-- Relevant projects build successfully.
-- Runtime behavior has been verified where possible.
-
-Do not begin Phase 2 until these criteria are met.
+Build and runtime validation have been performed.
 
 ## Phase 2 — JOT.Core.Math
+
+Status: ACTIVE PHASE
+
+All new development should prioritize the active phase unless:
+- Fixing a bug.
+- Correcting an architectural issue.
+- Completing a dependency required by the active phase.
 
 Use System.Numerics directly:
 1. Vector2
