@@ -73,6 +73,9 @@ JOT.NET/
     │   │   │   └── JOT.Infrastructure.Numerics.csproj
     │   │   └── JOT.Infrastructure.Silk/
     │   │       ├── JOT.Infrastructure.Silk.csproj
+    │   │       ├── Graphics/
+    │   │       │   ├── IGraphicsContext.cs
+    │   │       │   └── SilkGraphicsContext.cs
     │   │       ├── Input/
     │   │       │   ├── IInputContext.cs
     │   │       │   ├── IKeyboard.cs

@@ -1,3 +1,4 @@
+using JOT.Infrastructure.Silk.Graphics;
 using JOT.Infrastructure.Silk.Input;
 
 namespace JOT.Infrastructure.Silk.Windowing;
@@ -36,6 +37,11 @@ public interface IWindow
     /// Gets the input context associated with the window.
     /// </summary>
     IInputContext Input { get; }
+
+    /// <summary>
+    /// Gets the graphics context associated with the window.
+    /// </summary>
+    IGraphicsContext Graphics { get; }
 
     /// <summary>
     /// Starts the window loop and invokes the provided callback once per update.

@@ -1,7 +1,9 @@
-﻿using JOT.Infrastructure.Silk.Input;
+﻿using JOT.Infrastructure.Silk.Graphics;
+using JOT.Infrastructure.Silk.Input;
 using JOT.Infrastructure.Silk.Timing;
 using Silk.NET.Input;
 using Silk.NET.Maths;
+using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 using SilkWindowing = Silk.NET.Windowing;
 
@@ -19,6 +21,8 @@ public sealed class SilkWindow : IWindow
     private SilkInputContext? _input;
 
     private Action<IWindow, double>? _update;
+
+    private SilkGraphicsContext? _graphics;
 
     /// <summary>
     /// Gets the window title.
@@ -52,6 +56,14 @@ public sealed class SilkWindow : IWindow
         _input ??
         throw new InvalidOperationException(
             "Input has not been initialized.");
+
+    /// <summary>
+    /// Gets the graphics context associated with the window.
+    /// </summary>
+    public IGraphicsContext Graphics =>
+        _graphics ??
+        throw new InvalidOperationException(
+            "Graphics has not been initialized.");
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SilkWindow"/> class.
@@ -93,13 +105,19 @@ public sealed class SilkWindow : IWindow
     public void Close() => _window.Close();
 
     /// <summary>
-    /// Initializes input devices and other runtime services.
+    /// Initializes the input system and graphics context.
     /// </summary>
     private void OnLoad()
     {
         var inputContext = _window.CreateInput();
+
         _input = new SilkInputContext(inputContext);
+
+        var gl = GL.GetApi(_window);
+
+        _graphics = new SilkGraphicsContext(gl);
     }
+
 
     /// <summary>
     /// Updates timing information and checks for the Escape key.
