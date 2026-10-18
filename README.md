@@ -124,19 +124,26 @@ Browser Support: To maximize accessibility and reuse, browser clients are implem
 ## 📂 <a name="project-organization">Project Organization</a>
 
 ```text
-src/
-├── JOT.NET.slnx
-├── assets
-├── client-browser/
-├── client-desktop/
-├── demos/
-├── engine/
-│   ├── infrastructure/
-│   ├── core/
-│   ├── toolkits/
-│   └── framework/
-└── server/
+JOT.NET/
+├── AI.md                           # Prompts for expanding the game
+├── ARCHITECTURE.md                 # Detailed project architecture & directory structure
+├── LICENSE                         # License details
+├── README.md                       # Main project documentation
+└── src/
+    ├── JOT.NET.slnx
+    ├── assets
+    ├── client-browser/
+    ├── client-desktop/
+    ├── demos/
+    ├── engine/
+    │   ├── infrastructure/
+    │   ├── core/
+    │   ├── toolkits/
+    │   └── framework/
+    └── server/
 ```
+
+For a complete, file-by-file breakdown of the repository, see [ARCHITECTURE.md](https://github.com/g-amador/JOT.NET/blob/main/ARCHITECTURE.md).
 
 [Back to Table of Contents](#toc)
 
@@ -229,7 +236,7 @@ When contributing, please respect the layered architecture and keep Core minimal
 
 JOT.NET is released under the **MIT License**.
 
-See the `LICENSE` file for details.
+See the [LICENSE](https://github.com/g-amador/JOT.NET/blob/main/LICENSE) file for details.
 
 [Back to Table of Contents](#toc)
 
