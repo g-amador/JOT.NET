@@ -18,7 +18,7 @@ public sealed class SilkWindow : IWindow
 
     private SilkInputContext? _input;
 
-    private Action<IWindow>? _update;
+    private Action<IWindow, double>? _update;
 
     /// <summary>
     /// Gets the window title.
@@ -78,13 +78,14 @@ public sealed class SilkWindow : IWindow
         _window.Closing += OnClosing;
     }
 
-    /// <inheritdoc />
-    public void Run(Action<IWindow> update)
+    /// <inheritdoc />    
+    public void Run(Action<IWindow, double> update)
     {
         ArgumentNullException.ThrowIfNull(update);
 
         _update = update;
         IsRunning = true;
+
         _window.Run();
     }
 
@@ -110,7 +111,8 @@ public sealed class SilkWindow : IWindow
     {
         _timer.DeltaTime = deltaTime;
         _timer.TotalTime += deltaTime;
-        _update?.Invoke(this);
+
+        _update?.Invoke(this, deltaTime);
     }
 
     /// <summary>

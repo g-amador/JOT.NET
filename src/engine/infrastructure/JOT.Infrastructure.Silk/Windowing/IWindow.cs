@@ -38,9 +38,14 @@ public interface IWindow
     IInputContext Input { get; }
 
     /// <summary>
-    /// Called once per frame while the window is running.
+    /// Starts the window loop and invokes the provided callback once per update.
     /// </summary>
-    void Run(Action<IWindow> update);
+    /// <param name="update">
+    /// Callback executed every frame. The first parameter is the current window
+    /// instance and the second parameter is the elapsed time, in seconds,
+    /// since the previous update.
+    /// </param>
+    void Run(Action<IWindow, double> update);
 
     /// <summary>
     /// Requests the window to close.
