@@ -10,8 +10,4 @@
     <ProjectReference Include="..\..\infrastructure\JOT.Infrastructure.Numerics\JOT.Infrastructure.Numerics.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Extensions\" />
-  </ItemGroup>
-
 </Project>
