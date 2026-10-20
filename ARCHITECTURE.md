@@ -50,11 +50,36 @@ JOT.NET/
     │   │   ├── JOT.Core.IO/
     │   │   │   └── JOT.Core.IO.csproj
     │   │   ├── JOT.Core.Math/
-    │   │   │   └── JOT.Core.Math.csproj
+    │   │   │   ├── JOT.Core.Math.csproj
+    │   │   │   ├── Geometry/
+    │   │   │   │   ├── AxisAlignedBoundingBox.cs
+    │   │   │   │   ├── BoundingSphere.cs
+    │   │   │   │   ├── OrientedBoundingBox.cs
+    │   │   │   │   ├── Plane.cs
+    │   │   │   │   ├── Ray.cs
+    │   │   │   │   └── Intersections/
+    │   │   │   │       ├── BoxIntersections.cs
+    │   │   │   │       ├── RayIntersections.cs
+    │   │   │   │       └── SphereIntersections.cs
+    │   │   │   └── Transformations/
+    │   │   │       └── Transform.cs
     │   │   ├── JOT.Core.Physics/
     │   │   │   └── JOT.Core.Physics.csproj
     │   │   ├── JOT.Core.Rendering/
-    │   │   │   └── JOT.Core.Rendering.csproj
+    │   │   │   ├── JOT.Core.Rendering.csproj
+    │   │   │   ├── Cameras/
+    │   │   │   │   ├── Camera.cs
+    │   │   │   │   ├── ICamera.cs
+    │   │   │   │   ├── OrthographicCamera.cs
+    │   │   │   │   └── PerspectiveCamera.cs
+    │   │   │   ├── Materials/
+    │   │   │   │   └── IMaterial.cs
+    │   │   │   ├── Meshes/
+    │   │   │   │   └── IMesh.cs
+    │   │   │   ├── Renderers/
+    │   │   │   │   └── IRenderer.cs
+    │   │   │   └── Textures/
+    │   │   │       └── ITexture.cs
     │   │   └── JOT.Core.Util/
     │   │       └── JOT.Core.Util.csproj
     │   ├── framework/
@@ -69,8 +94,6 @@ JOT.NET/
     │   │   │   └── JOT.Infrastructure.Assimp.csproj
     │   │   ├── JOT.Infrastructure.DotNetty/
     │   │   │   └── JOT.Infrastructure.DotNetty.csproj
-    │   │   ├── JOT.Infrastructure.Numerics/
-    │   │   │   └── JOT.Infrastructure.Numerics.csproj
     │   │   └── JOT.Infrastructure.Silk/
     │   │       ├── JOT.Infrastructure.Silk.csproj
     │   │       ├── Graphics/
