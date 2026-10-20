@@ -19,7 +19,6 @@
   <Folder Name="/Infrastructure/">
     <Project Path="engine/infrastructure/JOT.Infrastructure.Assimp/JOT.Infrastructure.Assimp.csproj" />
     <Project Path="engine/infrastructure/JOT.Infrastructure.DotNetty/JOT.Infrastructure.DotNetty.csproj" />
-    <Project Path="engine/infrastructure/JOT.Infrastructure.Numerics/JOT.Infrastructure.Numerics.csproj" />
     <Project Path="engine/infrastructure/JOT.Infrastructure.Silk/JOT.Infrastructure.Silk.csproj" />
   </Folder>
   <Folder Name="/Server/">

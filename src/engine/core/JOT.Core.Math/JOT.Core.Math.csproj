@@ -6,8 +6,4 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\infrastructure\JOT.Infrastructure.Numerics\JOT.Infrastructure.Numerics.csproj" />
-  </ItemGroup>
-
 </Project>
