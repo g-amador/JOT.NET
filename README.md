@@ -10,7 +10,7 @@
 
 ---
 
-JOT.NET is a modern C#/.NET reimplementation of the original Java-based JOT (Just One Thing) engine. 
+JOT.NET is a modern C#/.NET reimplementation of the original Java-based [JOT](https://github.com/g-amador/JOT) (Just One Thing) engine.
 
 Designed for experimentation, education, prototyping, and Massively Multiplayer Online Games (MMOGs), it utilizes a modular architecture where subsystems can be extended or replaced independently.
 
