@@ -20,12 +20,11 @@ Designed for experimentation, education, prototyping, and Massively Multiplayer 
 
 JOT.NET is currently **experimental and not production ready**. Current priorities include:
 
-- Establishing the engine architecture
-- Implementing the Infrastructure layer
-- Building the desktop client foundation
-- Building the browser client foundation
-- Defining the Core engine systems
-- Preparing the networking architecture for MMO support
+- Engine architecture established (Infrastructure + Core layers)
+- Infrastructure layer implemented and runtime-validated
+- Core engine systems (Math, Rendering, Audio) implemented and runtime-validated
+- Next: Core Template validation, then the Toolkits layer
+- Networking architecture prepared for later MMO support
 
 ---
 
@@ -172,6 +171,7 @@ For a complete, file-by-file breakdown of the repository, see [ARCHITECTURE.md](
 | Model Loading | AssimpNet |
 | Networking | DotNetty |
 | Serialization | Protocol Buffers |
+| 3D Audio | OpenAL via Silk.NET (natives via OpenAL.Soft) |
 | Package Management | Central Package Management (CPM) |
 
 [Back to Table of Contents](#toc)
@@ -200,6 +200,42 @@ dotnet build
 ```bash
 dotnet run --project src/demos/templates/CoreTemplate
 ```
+
+Phase 2 — Core validation checklists (disposable smoke harnesses):
+
+```bash
+dotnet run --project src/demos/smoke/CoreRenderingSmoke
+dotnet run --project src/demos/smoke/CoreAudioSmoke
+```
+
+Math (JOT.Core.Math) — build-validated:
+- [ ] Transform composes world matrices from position, rotation, and scale.
+- [ ] Ray and Plane model engine geometry without replacing System.Numerics.
+- [ ] AxisAlignedBoundingBox and OrientedBoundingBox change basis via Transform().
+- [ ] BoundingSphere transforms volumes and is built from point clouds (CreateFromPoints).
+- [ ] Frustum extracts planes from perspective and orthographic projections (row-vector conventions, [0,1] depth).
+- [ ] Frustum.Contains(Vector3) performs point-inclusion culling tests.
+- [ ] FrustumIntersections tests spheres and axis-aligned boxes against the frustum.
+
+Rendering (CoreRenderingSmoke) — runtime-validated:
+- [ ] IGraphicsContext glue gains CreateShaderProgram, CreateVertexBuffer, and DrawTriangles.
+- [ ] SilkShaderProgram compiles and links vertex and fragment shader sources.
+- [ ] SilkVertexBuffer uploads vertex data and issues triangle draws.
+- [ ] Core.Rendering.Meshes.Mesh implements IMesh without referencing any third-party namespace.
+- [ ] SimpleRenderer draws meshes through a camera's view and projection matrices.
+- [ ] A triangle renders for 120 frames and the application exits cleanly (exit 0).
+
+Audio (CoreAudioSmoke) — runtime-validated:
+- [ ] Native OpenAL binaries are provisioned for the harness (OpenAL.Soft).
+- [ ] Audio device opens successfully (OpenAL device and context lifecycle).
+- [ ] Listener position and orientation are applied to the device.
+- [ ] Menu accepts number-key choices (1-5 and Q).
+- [ ] Procedural sine wave is synthesized and plays.
+- [ ] WAV file (assets/sounds/Weapons/pdp1_fire.wav) loads and plays.
+- [ ] Super Mario, Tetris, and Zelda: Song of Storms play from transcribed note tables.
+- [ ] All audio is rendered by the engine (no Console.Beep) and plays positionally to the right of the listener.
+- [ ] Any key stops playback early.
+- [ ] Q quits the menu, the device disposes, and the application exits cleanly.
 
 [Back to Table of Contents](#toc)
 

@@ -6,6 +6,15 @@ JOT.NET/
 ├── ARCHITECTURE.md                 # Detailed project architecture & directory structure
 ├── LICENSE                         # License details
 ├── README.md                       # Main project documentation
+├── assets/
+│   └── sounds/                     # Game-ready PCM WAV library (categorized)
+│       ├── Collisions/
+│       ├── Effects/
+│       ├── Music/
+│       ├── Powerups/
+│       ├── Ships/
+│       ├── UI/
+│       └── Weapons/
 └── src/
     ├── Directory.Packages.props
     ├── JOT.NET.slnx
@@ -39,6 +48,9 @@ JOT.NET/
     │       └── Program.cs
     ├── demos/
     │   ├── smoke/
+    │   │   ├── CoreAudioSmoke/
+    │   │   │   ├── CoreAudioSmoke.csproj
+    │   │   │   └── Program.cs
     │   │   └── CoreRenderingSmoke/
     │   │       ├── CoreRenderingSmoke.csproj
     │   │       └── Program.cs
@@ -51,6 +63,11 @@ JOT.NET/
     │           └── Program.cs
     ├── engine/
     │   ├── core/
+    │   │   ├── JOT.Core.Audio/
+    │   │   │   ├── JOT.Core.Audio.csproj
+    │   │   │   ├── Listener.cs
+    │   │   │   ├── SoundEmitter.cs
+    │   │   │   └── WaveFile.cs
     │   │   ├── JOT.Core.IO/
     │   │   │   └── JOT.Core.IO.csproj
     │   │   ├── JOT.Core.Math/
@@ -104,6 +121,11 @@ JOT.NET/
     │   │   │   └── JOT.Infrastructure.DotNetty.csproj
     │   │   └── JOT.Infrastructure.Silk/
     │   │       ├── JOT.Infrastructure.Silk.csproj
+    │   │       ├── Audio/
+    │   │       │   ├── IAudioDevice.cs
+    │   │       │   ├── IAudioSource.cs
+    │   │       │   ├── SilkAudioDevice.cs
+    │   │       │   └── SilkAudioSource.cs
     │   │       ├── Graphics/
     │   │       │   ├── IGraphicsContext.cs
     │   │       │   ├── IShaderProgram.cs

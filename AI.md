@@ -45,6 +45,15 @@ JOT.NET/
 ├── ARCHITECTURE.md                 # Detailed project architecture & directory structure
 ├── LICENSE                         # License details
 ├── README.md                       # Main project documentation
+├── assets/
+│   └── sounds/                     # Game-ready PCM WAV library (categorized)
+│       ├── Collisions/
+│       ├── Effects/
+│       ├── Music/
+│       ├── Powerups/
+│       ├── Ships/
+│       ├── UI/
+│       └── Weapons/
 └── src/
     ├── Directory.Packages.props
     ├── JOT.NET.slnx
@@ -78,6 +87,9 @@ JOT.NET/
     │       └── Program.cs
     ├── demos/
     │   ├── smoke/
+    │   │   ├── CoreAudioSmoke/
+    │   │   │   ├── CoreAudioSmoke.csproj
+    │   │   │   └── Program.cs
     │   │   └── CoreRenderingSmoke/
     │   │       ├── CoreRenderingSmoke.csproj
     │   │       └── Program.cs
@@ -90,6 +102,11 @@ JOT.NET/
     │           └── Program.cs
     ├── engine/
     │   ├── core/
+    │   │   ├── JOT.Core.Audio/
+    │   │   │   ├── JOT.Core.Audio.csproj
+    │   │   │   ├── Listener.cs
+    │   │   │   ├── SoundEmitter.cs
+    │   │   │   └── WaveFile.cs
     │   │   ├── JOT.Core.IO/
     │   │   │   └── JOT.Core.IO.csproj
     │   │   ├── JOT.Core.Math/
@@ -143,6 +160,11 @@ JOT.NET/
     │   │   │   └── JOT.Infrastructure.DotNetty.csproj
     │   │   └── JOT.Infrastructure.Silk/
     │   │       ├── JOT.Infrastructure.Silk.csproj
+    │   │       ├── Audio/
+    │   │       │   ├── IAudioDevice.cs
+    │   │       │   ├── IAudioSource.cs
+    │   │       │   ├── SilkAudioDevice.cs
+    │   │       │   └── SilkAudioSource.cs
     │   │       ├── Graphics/
     │   │       │   ├── IGraphicsContext.cs
     │   │       │   ├── IShaderProgram.cs
@@ -265,6 +287,7 @@ Adapters and integrations:
 - Input
 - Graphics contexts
 - Timing
+- Audio devices
 - Asset importing
 - Networking integrations
 - External libraries
@@ -274,6 +297,7 @@ Adapters and integrations:
 Minimal engine concepts:
 - Math
 - Rendering abstractions
+- Audio (positional sound)
 - Input abstractions
 - Resource abstractions
 - Basic collision concepts
@@ -302,7 +326,8 @@ Optional higher-level features:
 
 Roadmap progress:
 ✅ Phase 1 - Infrastructure
-🔄 Phase 2 - Core (Active)
+✅ Phase 2 - Core
+⬜ Core Template validation (Next)
 ⬜ Phase 3 - Toolkits
 ⬜ Phase 4 - Framework
 ⬜ Phase 5 - MMO Prototype
@@ -327,14 +352,52 @@ Build and runtime validation have been performed.
 
 ## Phase 2 — Core
 
-Status: ACTIVE PHASE
+Status: COMPLETED
 
-All new development should prioritize the active phase unless:
-- Fixing a bug.
-- Correcting an architectural issue.
-- Completing a dependency required by the active phase.
+Phase 2 completion criteria have been satisfied:
 
-Current Core work consists of two areas:
+1. JOT.Core.Math: engine concepts on System.Numerics (Transform, Ray, Plane, AxisAlignedBoundingBox, OrientedBoundingBox, BoundingSphere, Frustum), including frustum extraction and box/sphere/ray intersection helpers. Build validated.
+2. JOT.Core.Rendering: first Core-side implementation (Mesh, SimpleRenderer) on the Infrastructure glue. Runtime validated: 120 frame triangle render, clean exit (CoreRenderingSmoke).
+3. JOT.Core.Audio: positional audio (Listener, SoundEmitter, WaveFile) on the Infrastructure audio glue. Runtime validated: device, listener, WAV assets, and engine-synthesized melodies play positionally, clean exit (CoreAudioSmoke; criteria checklist below).
+
+Build and runtime validation have been performed.
+
+Full Phase 2 validation checklist:
+
+Validation basis: Math items are build-validated; Rendering and Audio items are runtime-validated by the disposable smoke harnesses. Unticked boxes await your confirmation.
+
+Math (JOT.Core.Math):
+- [ ] Transform composes world matrices from position, rotation, and scale.
+- [ ] Ray and Plane model engine geometry without replacing System.Numerics.
+- [ ] AxisAlignedBoundingBox and OrientedBoundingBox change basis via Transform().
+- [ ] BoundingSphere transforms volumes and is built from point clouds (CreateFromPoints).
+- [ ] Frustum extracts planes from perspective and orthographic projections (row-vector conventions, [0,1] depth).
+- [ ] Frustum.Contains(Vector3) performs point-inclusion culling tests.
+- [ ] FrustumIntersections tests spheres and axis-aligned boxes against the frustum.
+
+Rendering (CoreRenderingSmoke):
+- [ ] IGraphicsContext glue gains CreateShaderProgram, CreateVertexBuffer, and DrawTriangles.
+- [ ] SilkShaderProgram compiles and links vertex and fragment shader sources.
+- [ ] SilkVertexBuffer uploads vertex data and issues triangle draws.
+- [ ] Core.Rendering.Meshes.Mesh implements IMesh without referencing any third-party namespace.
+- [ ] SimpleRenderer draws meshes through a camera's view and projection matrices.
+- [ ] A triangle renders for 120 frames and the application exits cleanly (exit 0).
+
+Audio (CoreAudioSmoke):
+- [ ] Native OpenAL binaries are provisioned for the harness (OpenAL.Soft).
+- [ ] Audio device opens successfully (OpenAL device and context lifecycle).
+- [ ] Listener position and orientation are applied to the device.
+- [ ] Menu accepts number-key choices (1-5 and Q).
+- [ ] Procedural sine wave is synthesized and plays.
+- [ ] WAV file (assets/sounds/Weapons/pdp1_fire.wav) loads and plays.
+- [ ] Super Mario, Tetris, and Zelda: Song of Storms play from transcribed note tables.
+- [ ] All audio is rendered by the engine (no Console.Beep) and plays positionally to the right of the listener.
+- [ ] Any key stops playback early.
+- [ ] Q quits the menu, the device disposes, and the application exits cleanly.
+
+Solution and docs:
+- [ ] JOT.Core.Audio and both smoke harnesses are wired under /Demos in JOT.NET.slnx.
+- [ ] AI.md, README.md, and ARCHITECTURE.md trees and statuses match the implemented state.
 
 ### JOT.Core.Math
 
@@ -351,7 +414,7 @@ Only add types that represent genuine engine concepts.
 
 Do not create replacement vector or matrix types.
 
-Potential engine concepts:
+Implemented engine concepts:
 - Transform
 - Ray
 - Plane
@@ -376,7 +439,17 @@ Do not expose OpenGL, DirectX, Vulkan, or Silk.NET details in Core.
 
 Rendering implementations belong in Infrastructure.
 
+Implemented so far: Mesh (first IMesh implementation) and SimpleRenderer, runtime-validated by CoreRenderingSmoke.
+
 Math and Rendering should remain independent of platform, graphics API, and third-party rendering libraries.
+
+### JOT.Core.Audio
+
+Builds positional audio on the Infrastructure audio glue (OpenAL via Silk.NET).
+
+Audio validation is covered by the Audio block of the full Phase 2
+validation checklist above (device, listener, menu, sine, WAV,
+engine-synthesized melodies, positional playback, early stop, clean exit).
 
 # CORE TEMPLATE VALIDATION
 
