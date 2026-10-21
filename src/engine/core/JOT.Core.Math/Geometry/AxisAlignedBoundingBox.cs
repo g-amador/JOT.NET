@@ -82,6 +82,42 @@ public readonly struct AxisAlignedBoundingBox
                point.Z <= Max.Z;
     }
 
+    /// <summary>
+    /// Transforms the box by the specified matrix and returns the smallest
+    /// axis-aligned bounding box that contains the result.
+    ///
+    /// The returned box always contains the transformed box; it may be
+    /// larger than necessary when the matrix rotates or shears the box.
+    /// </summary>
+    /// <param name="transform">
+    /// Transform matrix to apply, in the form translation * rotation * scale.
+    /// </param>
+    /// <returns>
+    /// The transformed axis-aligned bounding box.
+    /// </returns>
+    public AxisAlignedBoundingBox Transform(Matrix4x4 transform)
+    {
+        var min = new Vector3(float.MaxValue);
+        var max = new Vector3(float.MinValue);
+
+        for (var i = 0; i < 8; i++)
+        {
+            var corner = new Vector3(
+                (i & 1) == 0 ? Min.X : Max.X,
+                (i & 2) == 0 ? Min.Y : Max.Y,
+                (i & 4) == 0 ? Min.Z : Max.Z);
+
+            corner = Vector3.Transform(
+                corner,
+                transform);
+
+            min = Vector3.Min(min, corner);
+            max = Vector3.Max(max, corner);
+        }
+
+        return new AxisAlignedBoundingBox(min, max);
+    }
+
     /// <inheritdoc />
     public override string ToString()
     {

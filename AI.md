@@ -99,6 +99,7 @@ JOT.NET/
     │   │   │   │   ├── Ray.cs
     │   │   │   │   └── Intersections/
     │   │   │   │       ├── BoxIntersections.cs
+    │   │   │   │       ├── FrustumIntersections.cs
     │   │   │   │       ├── RayIntersections.cs
     │   │   │   │       └── SphereIntersections.cs
     │   │   │   └── Transformations/
@@ -213,8 +214,8 @@ Dependency rules:
 - A module may extend any module from a lower layer, not only the adjacent one:
   - Framework may extend Toolkits, Core, and Infrastructure.
   - Toolkits may extend Core and Infrastructure.
-  - Core may extend Infrastructure.
-- Infrastructure must not depend on higher layers.
+  - Core may extend Infrastructure and Core modules.
+- Infrastructure is the lowest layer and must not depend on higher layers.
 - Dependencies flow toward lower layers.
 
 ## Rules
@@ -225,17 +226,24 @@ Dependency rules:
 - Lower layers must not know about higher layers.
 - Third-party libraries belong in Infrastructure.
 - Platform-specific code belongs in Infrastructure.
-- Keep Core independent of platform and graphics APIs.
+- Keep Core independent of third-party libraries and platform APIs;
+  Core reaches them only through Infrastructure contracts.
+- Infrastructure never implements Core contracts.
 - Prefer existing abstractions before creating new ones.
 
 ## Contracts vs Implementations
 
-- Core owns engine-facing contracts and abstractions.
-- Infrastructure owns platform-specific implementations.
-- Infrastructure may implement Core contracts.
-- Core must never depend on Infrastructure implementations.
-- Toolkits may depend on Core contracts.
-- Framework may depend on Toolkits and Core.
+- Infrastructure owns the contracts that wrap third-party libraries
+  (windowing, graphics, input, timing, asset loading, networking).
+- Infrastructure implements those contracts. They are library glue, not engine concepts.
+- Core uses Infrastructure and builds engine concepts on top of it.
+- Core may implement Core contracts. Infrastructure never implements Core contracts.
+- Nothing from Core is implemented in Infrastructure.
+- Infrastructure contains no engine logic — only library adapters.
+- Core never references third-party libraries or platform APIs directly;
+  it goes through Infrastructure contracts.
+- Toolkits may depend on Core contracts and Infrastructure.
+- Framework may depend on Toolkits, Core, and Infrastructure.
 - Lower layers must never depend on higher layers.
 
 # LAYER RESPONSABILITIES

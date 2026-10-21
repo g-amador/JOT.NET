@@ -60,6 +60,7 @@ JOT.NET/
     │   │   │   │   ├── Ray.cs
     │   │   │   │   └── Intersections/
     │   │   │   │       ├── BoxIntersections.cs
+    │   │   │   │       ├── FrustumIntersections.cs
     │   │   │   │       ├── RayIntersections.cs
     │   │   │   │       └── SphereIntersections.cs
     │   │   │   └── Transformations/
@@ -139,8 +140,11 @@ A module may extend any module from a lower layer — not only the adjacent one:
 |---------------|-----------------------------------|
 | Framework | Toolkits, Core, Infrastructure |
 | Toolkits | Core, Infrastructure |
-| Core | Infrastructure |
-| Infrastructure | — (never depends on higher layers) |
+| Core | Infrastructure, Core modules |
+| Infrastructure | — (bottom layer; third-party glue only) |
+
+Nothing from Core is implemented in Infrastructure: Infrastructure wraps
+third-party libraries and implements only its own glue contracts.
 
 Rules:
 
@@ -149,4 +153,5 @@ Rules:
 - No cross-layer shortcuts.
 - Lower layers must never know about higher layers.
 - Third-party libraries and platform-specific code belong in Infrastructure.
-- Core stays independent of platform and graphics APIs.
+- Core uses Infrastructure contracts, never third-party libraries directly.
+- Infrastructure never implements Core contracts.

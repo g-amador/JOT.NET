@@ -45,6 +45,59 @@ public readonly struct BoundingSphere
     }
 
     /// <summary>
+    /// Creates a sphere containing all specified points.
+    ///
+    /// The sphere is approximated: the center is the average of the
+    /// points and the radius reaches the farthest point from it.
+    /// </summary>
+    /// <param name="points">
+    /// Positions to enclose.
+    /// </param>
+    /// <returns>
+    /// A bounding sphere containing all points.
+    /// </returns>
+    /// <exception cref="ArgumentException">
+    /// Thrown when <paramref name="points"/> is empty.
+    /// </exception>
+    public static BoundingSphere CreateFromPoints(
+        ReadOnlySpan<Vector3> points)
+    {
+        if (points.Length == 0)
+        {
+            throw new ArgumentException(
+                "At least one point is required.",
+                nameof(points));
+        }
+
+        var center = Vector3.Zero;
+
+        foreach (var point in points)
+        {
+            center += point;
+        }
+
+        center /= points.Length;
+
+        var radiusSquared = 0.0f;
+
+        foreach (var point in points)
+        {
+            var distanceSquared = Vector3.DistanceSquared(
+                center,
+                point);
+
+            if (distanceSquared > radiusSquared)
+            {
+                radiusSquared = distanceSquared;
+            }
+        }
+
+        return new BoundingSphere(
+            center,
+            MathF.Sqrt(radiusSquared));
+    }
+
+    /// <summary>
     /// Determines whether the specified point is inside the sphere.
     /// </summary>
     /// <param name="point">
@@ -60,6 +113,41 @@ public readonly struct BoundingSphere
         return Vector3.DistanceSquared(
             Center,
             point) <= radiusSquared;
+    }
+
+    /// <summary>
+    /// Transforms the sphere by the specified matrix.
+    ///
+    /// The radius is scaled by the largest axis length of the matrix so
+    /// that the result always contains the transformed sphere; it may be
+    /// conservative for non-uniform scaling or shearing.
+    /// </summary>
+    /// <param name="transform">
+    /// Transform matrix to apply, in the form translation * rotation * scale.
+    /// </param>
+    /// <returns>
+    /// The transformed bounding sphere.
+    /// </returns>
+    public BoundingSphere Transform(Matrix4x4 transform)
+    {
+        var scaleX = new Vector3(
+            transform.M11,
+            transform.M12,
+            transform.M13).Length();
+
+        var scaleY = new Vector3(
+            transform.M21,
+            transform.M22,
+            transform.M23).Length();
+
+        var scaleZ = new Vector3(
+            transform.M31,
+            transform.M32,
+            transform.M33).Length();
+
+        return new BoundingSphere(
+            Vector3.Transform(Center, transform),
+            Radius * MathF.Max(scaleX, MathF.Max(scaleY, scaleZ)));
     }
 
     /// <summary>

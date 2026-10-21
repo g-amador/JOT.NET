@@ -82,6 +82,77 @@ public readonly struct OrientedBoundingBox
     }
 
     /// <summary>
+    /// Transforms the box by the specified matrix.
+    ///
+    /// The center and the three box axes are transformed individually and
+    /// the extents are taken from the transformed axis lengths. When the
+    /// matrix orients or scales the box non-uniformly, the result is a
+    /// close-fitting box that still contains the original.
+    /// </summary>
+    /// <param name="transform">
+    /// Transform matrix to apply, in the form translation * rotation * scale.
+    /// </param>
+    /// <returns>
+    /// The transformed oriented bounding box.
+    /// </returns>
+    public OrientedBoundingBox Transform(Matrix4x4 transform)
+    {
+        var center = Vector3.Transform(
+            Center,
+            transform);
+
+        var right = Vector3.TransformNormal(
+            new Vector3(Extents.X, 0.0f, 0.0f),
+            transform);
+
+        var up = Vector3.TransformNormal(
+            new Vector3(0.0f, Extents.Y, 0.0f),
+            transform);
+
+        var forward = Vector3.TransformNormal(
+            new Vector3(0.0f, 0.0f, Extents.Z),
+            transform);
+
+        var extents = new Vector3(
+            right.Length(),
+            up.Length(),
+            forward.Length());
+
+        right = GetAxis(right, Rotation, Vector3.UnitX);
+        up = GetAxis(up, Rotation, Vector3.UnitY);
+        forward = GetAxis(forward, Rotation, Vector3.UnitZ);
+
+        // Basis vector images are the matrix rows under row-vector
+        // semantics, so the rebuilt rotation matrix holds the transformed
+        // axes in its rows.
+        var rotation = new Matrix4x4(
+            right.X, right.Y, right.Z, 0.0f,
+            up.X, up.Y, up.Z, 0.0f,
+            forward.X, forward.Y, forward.Z, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+
+        return new OrientedBoundingBox(
+            center,
+            extents,
+            Quaternion.CreateFromRotationMatrix(rotation));
+    }
+
+    private static Vector3 GetAxis(
+        Vector3 axis,
+        Quaternion fallbackRotation,
+        Vector3 fallbackAxis)
+    {
+        if (axis.LengthSquared() > float.Epsilon)
+        {
+            return Vector3.Normalize(axis);
+        }
+
+        return Vector3.Transform(
+            fallbackAxis,
+            fallbackRotation);
+    }
+
+    /// <summary>
     /// Gets the full size of the box.
     /// </summary>
     public Vector3 Size => Extents * 2.0f;

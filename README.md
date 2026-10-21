@@ -91,8 +91,11 @@ A module may extend any module from a lower layer — not only the adjacent one:
 |---------------|-----------------------------------|
 | Framework | Toolkits, Core, Infrastructure |
 | Toolkits | Core, Infrastructure |
-| Core | Infrastructure |
-| Infrastructure | — (never depends on higher layers) |
+| Core | Infrastructure, Core modules |
+| Infrastructure | — (bottom layer; third-party glue only) |
+
+Nothing from Core is implemented in Infrastructure: Infrastructure wraps
+third-party libraries and implements only its own glue contracts.
 
 ### Core Principles
 
