@@ -130,3 +130,23 @@ JOT.NET/
             ├── JOT.Server.csproj
             └── Program.cs
 ```
+
+# Layer Dependencies
+
+A module may extend any module from a lower layer — not only the adjacent one:
+
+| Layer | May extend |
+|---------------|-----------------------------------|
+| Framework | Toolkits, Core, Infrastructure |
+| Toolkits | Core, Infrastructure |
+| Core | Infrastructure |
+| Infrastructure | — (never depends on higher layers) |
+
+Rules:
+
+- Dependencies flow toward lower layers.
+- No circular dependencies.
+- No cross-layer shortcuts.
+- Lower layers must never know about higher layers.
+- Third-party libraries and platform-specific code belong in Infrastructure.
+- Core stays independent of platform and graphics APIs.

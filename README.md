@@ -85,6 +85,15 @@ JOT.NET employs a strict layered architecture where dependencies only flow downw
 
 `Framework` → `Toolkits` → `Core` → `Infrastructure`
 
+A module may extend any module from a lower layer — not only the adjacent one:
+
+| Layer | May extend |
+|---------------|-----------------------------------|
+| Framework | Toolkits, Core, Infrastructure |
+| Toolkits | Core, Infrastructure |
+| Core | Infrastructure |
+| Infrastructure | — (never depends on higher layers) |
+
 ### Core Principles
 
 - Replaceability: Subsystems can be swapped without affecting the rest of the engine.

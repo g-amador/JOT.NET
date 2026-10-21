@@ -210,9 +210,10 @@ Framework
 
 Dependency rules:
 
-- Framework may depend on Toolkits, Core, and Infrastructure.
-- Toolkits may depend on Core and Infrastructure.
-- Core may depend on Infrastructure.
+- A module may extend any module from a lower layer, not only the adjacent one:
+  - Framework may extend Toolkits, Core, and Infrastructure.
+  - Toolkits may extend Core and Infrastructure.
+  - Core may extend Infrastructure.
 - Infrastructure must not depend on higher layers.
 - Dependencies flow toward lower layers.
 
