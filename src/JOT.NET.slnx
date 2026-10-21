@@ -10,7 +10,9 @@
     <Project Path="engine/core/JOT.Core.Rendering/JOT.Core.Rendering.csproj" Id="09b15da1-7e67-4b4f-afcd-fbf3a38c673f" />
     <Project Path="engine/core/JOT.Core.Util/JOT.Core.Util.csproj" />
   </Folder>
-  <Folder Name="/Examples/" />
+  <Folder Name="/Examples/">
+    <Project Path="demos/smoke/CoreRenderingSmoke/CoreRenderingSmoke.csproj" />
+  </Folder>
   <Folder Name="/Framework/">
     <Project Path="engine/framework/JOT.Framework.Application/JOT.Framework.Application.csproj" Id="66b60214-a275-4474-aa87-cd4a7444d06d" />
     <Project Path="engine/framework/JOT.Framework.GUI/JOT.Framework.GUI.csproj" Id="8f3f005d-23b4-4f05-85a1-eb76894db53a" />

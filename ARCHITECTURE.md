@@ -38,6 +38,10 @@ JOT.NET/
     │       ├── JOT.Client.Desktop.csproj
     │       └── Program.cs
     ├── demos/
+    │   ├── smoke/
+    │   │   └── CoreRenderingSmoke/
+    │   │       ├── CoreRenderingSmoke.csproj
+    │   │       └── Program.cs
     │   └── templates/
     │       ├── CoreTemplate/
     │       │   ├── CoreTemplate.csproj
@@ -77,9 +81,11 @@ JOT.NET/
     │   │   │   ├── Materials/
     │   │   │   │   └── IMaterial.cs
     │   │   │   ├── Meshes/
-    │   │   │   │   └── IMesh.cs
+    │   │   │   │   ├── IMesh.cs
+    │   │   │   │   └── Mesh.cs
     │   │   │   ├── Renderers/
-    │   │   │   │   └── IRenderer.cs
+    │   │   │   │   ├── IRenderer.cs
+    │   │   │   │   └── SimpleRenderer.cs
     │   │   │   └── Textures/
     │   │   │       └── ITexture.cs
     │   │   └── JOT.Core.Util/
@@ -100,7 +106,11 @@ JOT.NET/
     │   │       ├── JOT.Infrastructure.Silk.csproj
     │   │       ├── Graphics/
     │   │       │   ├── IGraphicsContext.cs
-    │   │       │   └── SilkGraphicsContext.cs
+    │   │       │   ├── IShaderProgram.cs
+    │   │       │   ├── IVertexBuffer.cs
+    │   │       │   ├── SilkGraphicsContext.cs
+    │   │       │   ├── SilkShaderProgram.cs
+    │   │       │   └── SilkVertexBuffer.cs
     │   │       ├── Input/
     │   │       │   ├── IInputContext.cs
     │   │       │   ├── IKeyboard.cs
