@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\infrastructure\JOT.Infrastructure.Silk\JOT.Infrastructure.Silk.csproj" />
+    <ProjectReference Include="..\JOT.Core.Math\JOT.Core.Math.csproj" />
   </ItemGroup>
 
 </Project>

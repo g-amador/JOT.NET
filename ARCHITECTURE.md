@@ -6,6 +6,15 @@ JOT.NET/
 ├── ARCHITECTURE.md                 # Detailed project architecture & directory structure
 ├── LICENSE                         # License details
 ├── README.md                       # Main project documentation
+├── assets/
+│   └── sounds/                     # Game-ready PCM WAV library (categorized)
+│       ├── Collisions/
+│       ├── Effects/
+│       ├── Music/
+│       ├── Powerups/
+│       ├── Ships/
+│       ├── UI/
+│       └── Weapons/
 └── src/
     ├── Directory.Packages.props
     ├── JOT.NET.slnx
@@ -38,6 +47,13 @@ JOT.NET/
     │       ├── JOT.Client.Desktop.csproj
     │       └── Program.cs
     ├── demos/
+    │   ├── smoke/
+    │   │   ├── CoreAudioSmoke/
+    │   │   │   ├── CoreAudioSmoke.csproj
+    │   │   │   └── Program.cs
+    │   │   └── CoreRenderingSmoke/
+    │   │       ├── CoreRenderingSmoke.csproj
+    │   │       └── Program.cs
     │   └── templates/
     │       ├── CoreTemplate/
     │       │   ├── CoreTemplate.csproj
@@ -47,14 +63,48 @@ JOT.NET/
     │           └── Program.cs
     ├── engine/
     │   ├── core/
+    │   │   ├── JOT.Core.Audio/
+    │   │   │   ├── JOT.Core.Audio.csproj
+    │   │   │   ├── Listener.cs
+    │   │   │   ├── SoundEmitter.cs
+    │   │   │   └── WaveFile.cs
     │   │   ├── JOT.Core.IO/
     │   │   │   └── JOT.Core.IO.csproj
     │   │   ├── JOT.Core.Math/
-    │   │   │   └── JOT.Core.Math.csproj
+    │   │   │   ├── JOT.Core.Math.csproj
+    │   │   │   ├── Geometry/
+    │   │   │   │   ├── AxisAlignedBoundingBox.cs
+    │   │   │   │   ├── BoundingSphere.cs
+    │   │   │   │   ├── Frustum.cs
+    │   │   │   │   ├── OrientedBoundingBox.cs
+    │   │   │   │   ├── Plane.cs
+    │   │   │   │   ├── Ray.cs
+    │   │   │   │   └── Intersections/
+    │   │   │   │       ├── BoxIntersections.cs
+    │   │   │   │       ├── FrustumIntersections.cs
+    │   │   │   │       ├── RayIntersections.cs
+    │   │   │   │       └── SphereIntersections.cs
+    │   │   │   └── Transformations/
+    │   │   │       └── Transform.cs
     │   │   ├── JOT.Core.Physics/
     │   │   │   └── JOT.Core.Physics.csproj
     │   │   ├── JOT.Core.Rendering/
-    │   │   │   └── JOT.Core.Rendering.csproj
+    │   │   │   ├── JOT.Core.Rendering.csproj
+    │   │   │   ├── Cameras/
+    │   │   │   │   ├── Camera.cs
+    │   │   │   │   ├── ICamera.cs
+    │   │   │   │   ├── OrthographicCamera.cs
+    │   │   │   │   └── PerspectiveCamera.cs
+    │   │   │   ├── Materials/
+    │   │   │   │   └── IMaterial.cs
+    │   │   │   ├── Meshes/
+    │   │   │   │   ├── IMesh.cs
+    │   │   │   │   └── Mesh.cs
+    │   │   │   ├── Renderers/
+    │   │   │   │   ├── IRenderer.cs
+    │   │   │   │   └── SimpleRenderer.cs
+    │   │   │   └── Textures/
+    │   │   │       └── ITexture.cs
     │   │   └── JOT.Core.Util/
     │   │       └── JOT.Core.Util.csproj
     │   ├── framework/
@@ -69,13 +119,20 @@ JOT.NET/
     │   │   │   └── JOT.Infrastructure.Assimp.csproj
     │   │   ├── JOT.Infrastructure.DotNetty/
     │   │   │   └── JOT.Infrastructure.DotNetty.csproj
-    │   │   ├── JOT.Infrastructure.Numerics/
-    │   │   │   └── JOT.Infrastructure.Numerics.csproj
     │   │   └── JOT.Infrastructure.Silk/
     │   │       ├── JOT.Infrastructure.Silk.csproj
+    │   │       ├── Audio/
+    │   │       │   ├── IAudioDevice.cs
+    │   │       │   ├── IAudioSource.cs
+    │   │       │   ├── SilkAudioDevice.cs
+    │   │       │   └── SilkAudioSource.cs
     │   │       ├── Graphics/
     │   │       │   ├── IGraphicsContext.cs
-    │   │       │   └── SilkGraphicsContext.cs
+    │   │       │   ├── IShaderProgram.cs
+    │   │       │   ├── IVertexBuffer.cs
+    │   │       │   ├── SilkGraphicsContext.cs
+    │   │       │   ├── SilkShaderProgram.cs
+    │   │       │   └── SilkVertexBuffer.cs
     │   │       ├── Input/
     │   │       │   ├── IInputContext.cs
     │   │       │   ├── IKeyboard.cs
@@ -106,3 +163,27 @@ JOT.NET/
             ├── JOT.Server.csproj
             └── Program.cs
 ```
+
+# Layer Dependencies
+
+A module may extend any module from a lower layer — not only the adjacent one:
+
+| Layer | May extend |
+|---------------|-----------------------------------|
+| Framework | Toolkits, Core, Infrastructure |
+| Toolkits | Core, Infrastructure |
+| Core | Infrastructure, Core modules |
+| Infrastructure | — (bottom layer; third-party glue only) |
+
+Nothing from Core is implemented in Infrastructure: Infrastructure wraps
+third-party libraries and implements only its own glue contracts.
+
+Rules:
+
+- Dependencies flow toward lower layers.
+- No circular dependencies.
+- No cross-layer shortcuts.
+- Lower layers must never know about higher layers.
+- Third-party libraries and platform-specific code belong in Infrastructure.
+- Core uses Infrastructure contracts, never third-party libraries directly.
+- Infrastructure never implements Core contracts.
