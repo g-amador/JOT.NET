@@ -1,5 +1,5 @@
-using System.Numerics;
 using JOT.Infrastructure.Silk.Audio;
+using System.Numerics;
 
 namespace JOT.Core.Audio;
 

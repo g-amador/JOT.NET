@@ -1,4 +1,3 @@
-using System.Numerics;
 using JOT.Core.Math.Transformations;
 using JOT.Infrastructure.Silk.Audio;
 

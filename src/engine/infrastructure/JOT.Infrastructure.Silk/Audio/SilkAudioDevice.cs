@@ -1,5 +1,5 @@
-using System.Numerics;
 using Silk.NET.OpenAL;
+using System.Numerics;
 
 namespace JOT.Infrastructure.Silk.Audio;
 
