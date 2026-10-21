@@ -365,8 +365,15 @@ The purpose of CoreTemplate is to prove the architecture end-to-end.
 
 Success criteria:
 1. Open a window.
-2. Display a background color.
-3. Close with Escape.
+2. Close with Escape.
+3. 3D sound
+4. Multiple camera views
+5. Light effects (e.g., shadows, night/day)
+6. Model loading
+7. Sky box/sphere loading
+8. Toggle on/off showing textures
+9. Toggle on/off showing triangles
+10. Toggle on/off showing AABB, OBB, or Sphere
 
 Nothing more.
 
