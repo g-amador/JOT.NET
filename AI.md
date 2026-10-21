@@ -2,7 +2,37 @@ You are helping me continue JOT.NET, a modern C#/.NET reimplementation of the or
 
 The project is experimental and not production-ready.
 
-Always inspect the actual repository before making assumptions. The code is the source of truth.
+Always inspect the actual repository before proposing changes.
+
+Verify existing implementations, project references, and dependencies before recommending new code.
+
+The repository is the source of truth.
+
+If the repository and this prompt disagree:
+1. Report the inconsistency.
+2. Explain the impact.
+3. Follow the repository.
+
+Do not introduce new systems, layers, managers, services, patterns, or abstractions unless an immediate requirement exists in the current phase.
+
+Prefer concrete implementations over speculative abstractions.
+
+Do not implement items from future phases merely because they may eventually be needed.
+
+Current phase requirements always take priority over future extensibility.
+
+Prefer the smallest implementation that validates the architecture.
+
+Validation is more important than feature completeness.
+
+A minimal working implementation is preferred over a generalized framework.
+
+When multiple valid next steps exist:
+
+1. Prefer validation of existing architecture.
+2. Prefer completing existing systems.
+3. Prefer fixing inconsistencies.
+4. Only then add new functionality.
 
 # PROJECT GITHUB REPO
 https://github.com/g-amador/JOT.NET/tree/V1.0
@@ -63,6 +93,7 @@ JOT.NET/
     │   │   │   ├── Geometry/
     │   │   │   │   ├── AxisAlignedBoundingBox.cs
     │   │   │   │   ├── BoundingSphere.cs
+    │   │   │   │   ├── Frustum.cs
     │   │   │   │   ├── OrientedBoundingBox.cs
     │   │   │   │   ├── Plane.cs
     │   │   │   │   ├── Ray.cs
@@ -142,11 +173,16 @@ JOT.NET/
 # Goals
 - Modular architecture with replaceable subsystems
 - Clear layer boundaries
-- Downward-only dependencies
+- Strict layer dependency rules
 - MMO-oriented long-term design
 - Educational value and maintainability
 - Desktop-first, browser later
 - Incremental validation of the foundation
+
+When evaluating the next step, first ask:
+"Does this directly help validate the current phase?"
+
+If the answer is no, do not implement it.
 
 # PRIMARY OBJECTIVE
 
@@ -162,13 +198,23 @@ Build a clean, modular, educational, and maintainable game engine foundation tha
 
 # ARCHITECTURE
 
-Framework
-    ↓
-Toolkits
-    ↓
-Core
-    ↓
+Layer order:
+
 Infrastructure
+    ↑
+Core
+    ↑
+Toolkits
+    ↑
+Framework
+
+Dependency rules:
+
+- Framework may depend on Toolkits, Core, and Infrastructure.
+- Toolkits may depend on Core and Infrastructure.
+- Core may depend on Infrastructure.
+- Infrastructure must not depend on higher layers.
+- Dependencies flow toward lower layers.
 
 ## Rules
 
@@ -179,15 +225,17 @@ Infrastructure
 - Third-party libraries belong in Infrastructure.
 - Platform-specific code belongs in Infrastructure.
 - Keep Core independent of platform and graphics APIs.
+- Prefer existing abstractions before creating new ones.
 
 ## Contracts vs Implementations
-- Core should own engine-facing abstractions.
-- Infrastructure should own platform-specific implementations.
-- Core must not depend on concrete Infrastructure implementations.
-- Infrastructure must not depend on higher layers.
 
-Avoid adding abstractions without a clear immediate need.
-
+- Core owns engine-facing contracts and abstractions.
+- Infrastructure owns platform-specific implementations.
+- Infrastructure may implement Core contracts.
+- Core must never depend on Infrastructure implementations.
+- Toolkits may depend on Core contracts.
+- Framework may depend on Toolkits and Core.
+- Lower layers must never depend on higher layers.
 
 # LAYER RESPONSABILITIES
 
@@ -271,12 +319,16 @@ Current Core work consists of two areas:
 
 ### JOT.Core.Math
 
-Use System.Numerics directly:
+JOT.Core.Math exists to provide engine concepts, not replacements for System.Numerics.
+
+Use System.Numerics directly for:
 1. Vector2
 2. Vector3
 3. Vector4
 4. Quaternion
 5. Matrix4x4
+
+Only add types that represent genuine engine concepts.
 
 Do not create replacement vector or matrix types.
 
@@ -298,6 +350,8 @@ Create API-independent abstractions such as:
 3. IMesh
 4. ITexture
 5. IMaterial
+
+Do not add new Core abstractions unless they are required by a current implementation or validation objective.
 
 Do not expose OpenGL, DirectX, Vulkan, or Silk.NET details in Core.
 
@@ -352,9 +406,11 @@ When an architectural violation is found:
 
 Before claiming completion:
 - Build affected projects.
-- Report warnings and errors.
-- State what was built.
-- State what was executed.
+- Report build warnings.
+- Report build errors.
+- State exactly which projects were built.
+- State exactly what was executed.
+- Do not claim runtime validation unless runtime validation was actually performed.
 - State what could not be executed and why.
 
 Do not claim runtime validation if it was not performed.
@@ -369,5 +425,6 @@ Do not claim runtime validation if it was not performed.
 - Preserve architectural boundaries.
 - Do not invent repository details.
 - Ask questions only when a decision genuinely blocks progress.
+- Prefer concrete types until a second implementation is required.
 
 This version is about half the size, but retains nearly all of the architectural guidance that will actually influence an AI agent's behavior.

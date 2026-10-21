@@ -54,6 +54,7 @@ JOT.NET/
     │   │   │   ├── Geometry/
     │   │   │   │   ├── AxisAlignedBoundingBox.cs
     │   │   │   │   ├── BoundingSphere.cs
+    │   │   │   │   ├── Frustum.cs
     │   │   │   │   ├── OrientedBoundingBox.cs
     │   │   │   │   ├── Plane.cs
     │   │   │   │   ├── Ray.cs
