@@ -4,13 +4,15 @@
     <Project Path="client-desktop/JOT.Client.Desktop/JOT.Client.Desktop.csproj" Id="cfa67d31-7e14-4aab-b78e-5a94f03472a9" />
   </Folder>
   <Folder Name="/Core/">
+    <Project Path="engine/core/JOT.Core.Audio/JOT.Core.Audio.csproj" />
     <Project Path="engine/core/JOT.Core.IO/JOT.Core.IO.csproj" Id="2109d685-021f-4307-9ba6-88af4a71d15f" />
     <Project Path="engine/core/JOT.Core.Math/JOT.Core.Math.csproj" Id="ecfa8617-39df-44fa-995c-a573bcd28a9d" />
     <Project Path="engine/core/JOT.Core.Physics/JOT.Core.Physics.csproj" Id="c868e90b-5478-4ed9-8e6e-78e265e9b75c" />
     <Project Path="engine/core/JOT.Core.Rendering/JOT.Core.Rendering.csproj" Id="09b15da1-7e67-4b4f-afcd-fbf3a38c673f" />
     <Project Path="engine/core/JOT.Core.Util/JOT.Core.Util.csproj" />
   </Folder>
-  <Folder Name="/Examples/">
+  <Folder Name="/Demos/">
+    <Project Path="demos/smoke/CoreAudioSmoke/CoreAudioSmoke.csproj" />
     <Project Path="demos/smoke/CoreRenderingSmoke/CoreRenderingSmoke.csproj" />
   </Folder>
   <Folder Name="/Framework/">
