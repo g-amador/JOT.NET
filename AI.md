@@ -340,7 +340,9 @@ before the next; engine additions ride along in Core/Infrastructure):
 - [x] Step 1 - Camera + textured ground plane (texture glue: image
       loader, ITexture2D, ShaderProgram sampler/float uniforms, extended
       vertex layout pos+color+normal+uv)
-- [ ] Step 2 - Model loading from assets/models (Assimp importer glue)
+- [x] Step 2 - Model loading from assets/models (Assimp importer glue,
+      OBJ and glTF 2 only; placeholder models baked into the vertex
+      layout and textured from assets/textures/materials)
 - [ ] Step 3 - Sky containers: sky box AND sky dome, selectable
       Off / Dome / Box (S key), textured from assets/textures
 - [ ] Step 4 - Directional light + shadow maps

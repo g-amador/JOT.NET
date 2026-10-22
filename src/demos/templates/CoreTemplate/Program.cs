@@ -1,10 +1,13 @@
 ﻿// The JOT.NET Core Template validation program (AI.md success criteria);
-// currently at Step 1: a flying camera over a procedural textured ground
-// plane through the Infrastructure glue (SilkWindow, image loader,
-// ITexture2D, SimpleRenderer shader programs). The vertex layout is
-// fixed as position (3), color (3), normal (3), uv (2).
+// currently at Step 2: textured models loaded from assets/models (OBJ
+// and glTF 2 only), baked into the fixed vertex layout and placed on
+// the procedural textured ground plane through the Infrastructure glue
+// (SilkWindow, image loader, ITexture2D, Assimp importer, SimpleRenderer
+// shader programs). The vertex layout is fixed as position (3), color
+// (3), normal (3), uv (2).
 
 using System.Numerics;
+using JOT.Core.Math.Transformations;
 using JOT.Core.Rendering.Cameras;
 using JOT.Core.Rendering.Meshes;
 using JOT.Core.Rendering.Renderers;
@@ -106,6 +109,64 @@ float[] CreateGroundVertices(
     return vertices;
 }
 
+// Bakes an imported mesh into triangle-soup vertices by expanding the
+// index list. DrawArrays consumes the consecutive triples directly;
+// index buffer glue arrives with a later step.
+
+float[] BakeMeshVertices(
+    ImportedMesh mesh)
+{
+    const int stride = Mesh.ComponentsPerVertex;
+
+    var vertices = new float[mesh.Indices.Length * stride];
+
+    for (var i = 0; i < mesh.Indices.Length; ++i)
+    {
+        var source = (int)mesh.Indices[i];
+
+        vertices[i * stride + 0] = mesh.Positions[source * 3 + 0];
+        vertices[i * stride + 1] = mesh.Positions[source * 3 + 1];
+        vertices[i * stride + 2] = mesh.Positions[source * 3 + 2];
+
+        vertices[i * stride + 3] = 1.0f;
+        vertices[i * stride + 4] = 1.0f;
+        vertices[i * stride + 5] = 1.0f;
+
+        if (source * 3 + 2 < mesh.Normals.Length)
+        {
+            vertices[i * stride + 6] = mesh.Normals[source * 3 + 0];
+            vertices[i * stride + 7] = mesh.Normals[source * 3 + 1];
+            vertices[i * stride + 8] = mesh.Normals[source * 3 + 2];
+        }
+        else
+        {
+            vertices[i * stride + 6] = 0.0f;
+            vertices[i * stride + 7] = 1.0f;
+            vertices[i * stride + 8] = 0.0f;
+        }
+
+        vertices[i * stride + 9] = mesh.UvCoordinates[source * 2 + 0];
+        vertices[i * stride + 10] = mesh.UvCoordinates[source * 2 + 1];
+    }
+
+    return vertices;
+}
+
+Transform CreateTransform(
+    Vector3 position,
+    Vector3 scale,
+    float yaw,
+    float pitch)
+{
+    var transform = new Transform();
+
+    transform.Position = position;
+    transform.Rotation = Quaternion.CreateFromYawPitchRoll(yaw, pitch, 0.0f);
+    transform.Scale = scale;
+
+    return transform;
+}
+
 string FindAssetsDirectory()
 {
     var directory = new DirectoryInfo(AppContext.BaseDirectory);
@@ -168,9 +229,7 @@ SimpleRenderer? renderer = null;
 
 IShaderProgram? shaderProgram = null;
 
-IVertexBuffer? ground = null;
-
-ITexture2D? groundTexture = null;
+var sceneItems = new List<SceneItem>();
 
 var frameCount = 0;
 
@@ -184,36 +243,140 @@ window.Run((currentWindow, deltaTime) =>
             VertexShaderSource,
             FragmentShaderSource);
 
-        ground = renderer.CreateVertexBuffer(
-            new Mesh("Ground", CreateGroundVertices(10.0f)));
-
-        var groundImage = imageLoader.Load(
-            Path.Combine(
-                assetsDirectory,
-                "textures",
-                "materials",
-                "greengrass",
-                "greengrass-lambertian.png"));
-
-        groundTexture = renderer.CreateTexture(
-            groundImage.Width,
-            groundImage.Height,
-            groundImage.Pixels);
-
         renderer.SetViewport(1280, 720);
+
+        var texturesByPath = new Dictionary<string, ITexture2D>();
+
+        ITexture2D CreateTextureFromFile(
+            string texturePath)
+        {
+            if (texturesByPath.TryGetValue(texturePath, out var existing))
+            {
+                return existing;
+            }
+
+            var image = imageLoader.Load(texturePath);
+
+            var texture = renderer.CreateTexture(
+                image.Width,
+                image.Height,
+                image.Pixels);
+
+            texturesByPath.Add(texturePath, texture);
+
+            Console.WriteLine($"Loaded texture '{Path.GetFileName(texturePath)}' ({image.Width}x{image.Height}).");
+
+            return texture;
+        }
+
+        // Ground plane: procedural geometry, grass material.
+
+        sceneItems.Add(
+            new SceneItem(
+                renderer.CreateVertexBuffer(
+                    new Mesh("Ground", CreateGroundVertices(10.0f))),
+                CreateTextureFromFile(
+                    Path.Combine(
+                        assetsDirectory,
+                        "textures",
+                        "materials",
+                        "greengrass",
+                        "greengrass-lambertian.png")),
+                new Transform()));
+
+        // Model instances: placeholder assets under assets/models; the
+        // material textures come from assets/textures/materials. Every
+        // model file fails loudly when missing or of a wrong format.
+
+        var modelsDirectory = Path.Combine(assetsDirectory, "models");
+
+        var materialTexturesDirectory = Path.Combine(
+            assetsDirectory,
+            "textures",
+            "materials");
+
+        using var modelImporter = new AssimpModelImporter();
+
+        var modelsByFile = new Dictionary<string, ImportedModel>();
+
+        ImportedModel ImportModel(
+            string modelFile)
+        {
+            if (modelsByFile.TryGetValue(modelFile, out var existing))
+            {
+                return existing;
+            }
+
+            var model = modelImporter.Import(
+                Path.Combine(modelsDirectory, modelFile));
+
+            modelsByFile.Add(modelFile, model);
+
+            var totalTriangles = 0;
+
+            foreach (var mesh in model.Meshes)
+            {
+                totalTriangles += mesh.Indices.Length / 3;
+            }
+
+            Console.WriteLine(
+                $"Loaded model '{model.Name}': {model.Meshes.Count} mesh(es), {totalTriangles} triangles.");
+
+            return model;
+        }
+
+        var sceneInstances = new (string ModelFile, string TextureDirectory, string TextureFile, Transform Transform)[]
+        {
+            ("cow.obj", "rockydirt", "rockydirt-lambertian.png",
+                CreateTransform(new Vector3(-3.0f, 0.0f, -1.0f), Vector3.One, -1.2f, 0.0f)),
+            ("brick_cube.obj", "redbrick", "redbrick-lambertian.png",
+                CreateTransform(new Vector3(2.2f, 0.0f, 0.2f), Vector3.One, 0.0f, 0.0f)),
+            ("brick_cube.obj", "redbrick", "redbrick-lambertian.png",
+                CreateTransform(new Vector3(3.2f, 0.0f, -0.6f), Vector3.One, 0.7f, 0.0f)),
+            ("fighter.obj", "metalcrate", "metalcrate-lambertian.png",
+                CreateTransform(new Vector3(0.0f, 1.6f, -3.5f), Vector3.One, -1.9f, 0.15f)),
+            ("cone.obj", "stucco", "stucco-lambertian.png",
+                CreateTransform(new Vector3(4.5f, 0.0f, -3.0f), new Vector3(2.2f, 2.8f, 2.2f), 0.0f, 0.0f)),
+        };
+
+        foreach (var instance in sceneInstances)
+        {
+            var model = ImportModel(instance.ModelFile);
+
+            var texture = CreateTextureFromFile(
+                Path.Combine(
+                    materialTexturesDirectory,
+                    instance.TextureDirectory,
+                    instance.TextureFile));
+
+            foreach (var mesh in model.Meshes)
+            {
+                sceneItems.Add(
+                    new SceneItem(
+                        renderer.CreateVertexBuffer(
+                            new Mesh(
+                                mesh.Name,
+                                BakeMeshVertices(mesh))),
+                        texture,
+                        instance.Transform));
+            }
+        }
     }
 
     renderer!.Clear(0.1f, 0.15f, 0.35f, 1.0f);
 
-    renderer.DrawTriangles(
-        ground!,
-        shaderProgram!,
-        "uViewProjection",
-        viewProjection,
-        "uModel",
-        Matrix4x4.Identity,
-        groundTexture!,
-        "uTexture");
+    foreach (var item in sceneItems)
+    {
+        renderer.DrawTriangles(
+            item.Buffer,
+            shaderProgram!,
+            "uViewProjection",
+            viewProjection,
+            "uModel",
+            item.Transform.WorldMatrix,
+            item.Texture,
+            "uTexture");
+    }
 
     if (currentWindow.Input.Keyboard.IsKeyPressed(KeyCode.Escape)
         || (frameLimit is int limit && ++frameCount >= limit))
@@ -223,3 +386,10 @@ window.Run((currentWindow, deltaTime) =>
         Console.WriteLine($"Template closed normally after {frameCount} frames.");
     }
 });
+
+// Identifies one textured, positioned entry of the scene composition.
+
+record SceneItem(
+    IVertexBuffer Buffer,
+    ITexture2D Texture,
+    Transform Transform);
