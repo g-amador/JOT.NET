@@ -9,6 +9,10 @@ namespace JOT.Infrastructure.Assimp.Importing;
 /// Imports are triangulated, UV coordinates are flipped into the
 /// OpenGL convention, smooth normals are generated when missing, and
 /// identical vertices are welded together.
+///
+/// Only Wavefront OBJ and glTF 2 (glTF/GLB) files are accepted; all
+/// other formats fail loudly. The engine supports exactly these two
+/// authoring formats.
 /// </summary>
 public sealed class AssimpModelImporter : IModelImporter
 {
@@ -24,6 +28,15 @@ public sealed class AssimpModelImporter : IModelImporter
     public ImportedModel Import(string filePath)
     {
         ArgumentNullException.ThrowIfNull(filePath);
+
+        var extension = Path.GetExtension(filePath).ToLowerInvariant();
+
+        if (extension is not (".obj" or ".gltf" or ".glb"))
+        {
+            throw new NotSupportedException(
+                $"Unsupported model format '{extension}' in '{filePath}'. " +
+                "Only Wavefront OBJ (.obj) and glTF 2 (.gltf/.glb) files are supported.");
+        }
 
         if (!File.Exists(filePath))
         {

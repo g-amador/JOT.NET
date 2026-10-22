@@ -514,6 +514,9 @@ Model and material placeholder names resolve by path and fail loudly
 with a clear message when missing; real files may replace the
 placeholders under the same names at any time.
 
+Model formats: the importer accepts only Wavefront OBJ (.obj) and
+glTF 2 (.gltf/.glb); every other format fails loudly.
+
 The ground plane is built procedurally (no model file required).
 Wireframe debug containers and the ground grid reuse Geometry from
 JOT.Core.Math.
