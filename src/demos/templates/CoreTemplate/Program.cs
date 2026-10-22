@@ -1,16 +1,14 @@
 ﻿// The JOT.NET Core Template validation program (AI.md success criteria);
-// currently at Step 2: textured models loaded from assets/models (OBJ
-// and glTF 2 only), baked into the fixed vertex layout and placed on
-// the procedural textured ground plane through the Infrastructure glue
-// (SilkWindow, image loader, ITexture2D, Assimp importer, SimpleRenderer
-// shader programs). The vertex layout is fixed as position (3), color
-// (3), normal (3), uv (2).
+// currently at Step 3: sky containers (box and dome both loaded and
+// selectable) over the textured ground and models through the
+// Infrastructure glue. The S key cycles Off / Dome / Box.
 
 using System.Numerics;
 using JOT.Core.Math.Transformations;
 using JOT.Core.Rendering.Cameras;
 using JOT.Core.Rendering.Meshes;
 using JOT.Core.Rendering.Renderers;
+using JOT.Core.Rendering.Sky;
 using JOT.Infrastructure.Assimp.Importing;
 using JOT.Infrastructure.Silk.Graphics;
 using JOT.Infrastructure.Silk.Input;
@@ -55,6 +53,41 @@ const string FragmentShaderSource = """
     void main()
     {
         fragmentColor = texture(uTexture, vertexUv) * vec4(vertexColor, 1.0);
+    }
+    """;
+
+// The sky box draws through its own program: the vertex position is
+// the local view direction, sampled by the cube map.
+
+const string SkyBoxVertexShaderSource = """
+    #version 330 core
+
+    layout (location = 0) in vec3 position;
+
+    uniform mat4 transform;
+
+    out vec3 skyDirection;
+
+    void main()
+    {
+        skyDirection = position;
+
+        gl_Position = transform * vec4(position, 1.0);
+    }
+    """;
+
+const string SkyBoxFragmentShaderSource = """
+    #version 330 core
+
+    in vec3 skyDirection;
+
+    out vec4 fragmentColor;
+
+    uniform samplerCube uSky;
+
+    void main()
+    {
+        fragmentColor = texture(uSky, normalize(skyDirection));
     }
     """;
 
@@ -212,6 +245,14 @@ camera.Transform.Rotation = Quaternion.CreateFromAxisAngle(
 
 var viewProjection = camera.ViewMatrix * camera.ProjectionMatrix;
 
+// The sky containers center on the camera position: the sky box draws
+// through its single composite transform, the sky dome supplies the
+// same matrices separately through the textured scene program.
+
+var skyMatrix = Matrix4x4.CreateTranslation(camera.Transform.Position);
+
+var skyBoxComposite = skyMatrix * viewProjection;
+
 // Optional frame limit for automated validation runs; without the
 // argument the template runs until Escape is pressed.
 
@@ -224,10 +265,21 @@ for (var i = 0; i < args.Length - 1; ++i)
         frameLimit = int.Parse(args[i + 1]);
     }
 }
-
 SimpleRenderer? renderer = null;
 
 IShaderProgram? shaderProgram = null;
+
+IShaderProgram? skyBoxShaderProgram = null;
+
+ITextureCubeMap? skyBoxTexture = null;
+
+ITexture2D? skyDomeTexture = null;
+
+IVertexBuffer? skyBoxBuffer = null;
+
+IVertexBuffer? skyDomeBuffer = null;
+
+var skyMode = SkyMode.Dome;
 
 var sceneItems = new List<SceneItem>();
 
@@ -242,6 +294,10 @@ window.Run((currentWindow, deltaTime) =>
         shaderProgram = renderer.CreateShaderProgram(
             VertexShaderSource,
             FragmentShaderSource);
+
+        skyBoxShaderProgram = renderer.CreateShaderProgram(
+            SkyBoxVertexShaderSource,
+            SkyBoxFragmentShaderSource);
 
         renderer.SetViewport(1280, 720);
 
@@ -361,9 +417,123 @@ window.Run((currentWindow, deltaTime) =>
                         instance.Transform));
             }
         }
+
+        // Sky dome: panoramic texture on the hemisphere geometry.
+
+        skyDomeTexture = CreateTextureFromFile(
+            Path.Combine(
+                assetsDirectory,
+                "textures",
+                "skydome",
+                "sky_midafternoon.jpg"));
+
+        var skyDome = new SkyDome(
+            60.0f,
+            32,
+            8);
+
+        skyDomeBuffer = renderer.CreateVertexBuffer(skyDome.Geometry);
+
+        Console.WriteLine($"Loaded sky dome texture ({skyDome.Geometry.VertexCount} dome vertices).");
+
+        // Sky box: six-face cube map from the desert set, faces bound in
+        // the OpenGL cube map order +X, -X, +Y, -Y, +Z, -Z.
+
+        var boxDirectory = Path.Combine(
+            assetsDirectory,
+            "textures",
+            "skybox",
+            "desert");
+
+        var boxFaceNames = new[]
+        {
+            "rt",
+            "lf",
+            "up",
+            "dn",
+            "ft",
+            "bk",
+        };
+
+        var faces = new byte[boxFaceNames.Length][];
+
+        var faceWidth = 0;
+        var faceHeight = 0;
+
+        for (var i = 0; i < boxFaceNames.Length; ++i)
+        {
+            var image = imageLoader.Load(
+                Path.Combine(
+                    boxDirectory,
+                    $"desert_{boxFaceNames[i]}.jpg"));
+
+            if (faceWidth == 0)
+            {
+                faceWidth = image.Width;
+                faceHeight = image.Height;
+            }
+            else if (image.Width != faceWidth || image.Height != faceHeight)
+            {
+                throw new InvalidOperationException(
+                    $"Sky box face '{boxFaceNames[i]}' is {image.Width}x{image.Height} but faces must share {faceWidth}x{faceHeight}.");
+            }
+
+            faces[i] = image.Pixels;
+        }
+
+        skyBoxTexture = renderer.CreateTextureCubeMap(
+            faceWidth,
+            faceHeight,
+            faces);
+
+        var skyBox = new SkyBox(100.0f);
+
+        skyBoxBuffer = renderer.CreateVertexBuffer(skyBox.Geometry);
+
+        Console.WriteLine($"Loaded sky box 'desert' (6 faces at {faceWidth}x{faceHeight}).");
+    }
+
+    // Cycle the sky mode on the S key.
+
+    if (currentWindow.Input.Keyboard.IsKeyPressed(KeyCode.S))
+    {
+        skyMode = skyMode switch
+        {
+            SkyMode.Off => SkyMode.Dome,
+            SkyMode.Dome => SkyMode.Box,
+            _ => SkyMode.Off,
+        };
+
+        Console.WriteLine($"Sky mode: {skyMode}");
     }
 
     renderer!.Clear(0.1f, 0.15f, 0.35f, 1.0f);
+
+    // The sky renders first at far radius; the scene draws over it.
+    // The dome shares the textured scene program.
+
+    if (skyMode == SkyMode.Dome)
+    {
+        renderer.DrawTriangles(
+            skyDomeBuffer!,
+            shaderProgram!,
+            "uViewProjection",
+            viewProjection,
+            "uModel",
+            skyMatrix,
+            skyDomeTexture!,
+            "uTexture");
+    }
+    else if (skyMode == SkyMode.Box)
+    {
+        renderer.DrawTriangles(
+            skyBoxBuffer!,
+            skyBoxShaderProgram!,
+            "transform",
+            skyBoxComposite,
+            skyBoxTexture!,
+            "uSky");
+    }
 
     foreach (var item in sceneItems)
     {

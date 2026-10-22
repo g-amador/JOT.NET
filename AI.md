@@ -343,8 +343,9 @@ before the next; engine additions ride along in Core/Infrastructure):
 - [x] Step 2 - Model loading from assets/models (Assimp importer glue,
       OBJ and glTF 2 only; placeholder models baked into the vertex
       layout and textured from assets/textures/materials)
-- [ ] Step 3 - Sky containers: sky box AND sky dome, selectable
-      Off / Dome / Box (S key), textured from assets/textures
+- [x] Step 3 - Sky containers: sky box AND sky dome both loadable,
+      S key cycles Off / Dome / Box; desert cube map, midafternoon
+      panorama (all three modes capture-verified)
 - [ ] Step 4 - Directional light + shadow maps
 - [ ] Step 5 - Debug containers + toggles: wireframe triangles, texture
       visibility, AABB/OBB/Sphere containers (keys 0/8/9)
