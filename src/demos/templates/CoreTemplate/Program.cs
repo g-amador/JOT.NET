@@ -1,11 +1,12 @@
 ﻿// The JOT.NET Core Template validation program (AI.md success criteria);
-// currently at Step 3: sky containers (box and dome both loaded and
-// selectable) over the textured ground and models through the
-// Infrastructure glue. The S key cycles Off / Dome / Box.
+// currently at Step 4: sun-like directional light casting shadow maps
+// ground and textured models, sky containers selectable through the S
+// key (Off / Dome / Box).
 
 using System.Numerics;
 using JOT.Core.Math.Transformations;
 using JOT.Core.Rendering.Cameras;
+using JOT.Core.Rendering.Lights;
 using JOT.Core.Rendering.Meshes;
 using JOT.Core.Rendering.Renderers;
 using JOT.Core.Rendering.Sky;
@@ -27,16 +28,24 @@ const string VertexShaderSource = """
 
     uniform mat4 uViewProjection;
     uniform mat4 uModel;
+    uniform mat4 uLightViewProj;
 
     out vec3 vertexColor;
     out vec2 vertexUv;
+    out vec3 vertexNormal;
+    out vec4 vertexShadowPosition;
 
     void main()
     {
         vertexColor = color;
         vertexUv = uv;
+        vertexNormal = normal;
 
-        gl_Position = uViewProjection * (uModel * vec4(position, 1.0));
+        vec4 worldPosition = uModel * vec4(position, 1.0);
+
+        vertexShadowPosition = uLightViewProj * worldPosition;
+
+        gl_Position = uViewProjection * worldPosition;
     }
     """;
 
@@ -45,14 +54,65 @@ const string FragmentShaderSource = """
 
     in vec3 vertexColor;
     in vec2 vertexUv;
+    in vec3 vertexNormal;
+    in vec4 vertexShadowPosition;
 
     out vec4 fragmentColor;
 
     uniform sampler2D uTexture;
+    uniform sampler2D uShadowMap;
+    uniform vec3 uLightDirection;
+    uniform vec3 uLightColor;
+    uniform float uAmbient;
 
     void main()
     {
-        fragmentColor = texture(uTexture, vertexUv) * vec4(vertexColor, 1.0);
+        float diffuse = max(dot(normalize(vertexNormal), uLightDirection), 0.0);
+
+        vec3 shadowCoords = vertexShadowPosition.xyz / vertexShadowPosition.w;
+
+        shadowCoords = shadowCoords * 0.5 + 0.5;
+
+        float shadowFactor = 1.0;
+
+        if (shadowCoords.x > 0.0 && shadowCoords.x < 1.0 &&
+            shadowCoords.y > 0.0 && shadowCoords.y < 1.0)
+        {
+            float occluderDepth = texture(uShadowMap, shadowCoords.xy).r;
+
+            if (occluderDepth < shadowCoords.z - 0.003)
+            {
+                shadowFactor = 0.0;
+            }
+        }
+
+        vec3 light = uLightColor * (uAmbient + diffuse * shadowFactor);
+
+        fragmentColor = texture(uTexture, vertexUv) * vec4(vertexColor, 1.0) * vec4(light, 1.0);
+    }
+    """;
+
+const string ShadowVertexShaderSource = """
+    #version 330 core
+
+    layout (location = 0) in vec3 position;
+
+    uniform mat4 transform;
+
+    void main()
+    {
+        gl_Position = transform * vec4(position, 1.0);
+    }
+    """;
+
+const string ShadowFragmentShaderSource = """
+    #version 330 core
+
+    out vec4 fragmentColor;
+
+    void main()
+    {
+        fragmentColor = vec4(1.0);
     }
     """;
 
@@ -245,9 +305,25 @@ camera.Transform.Rotation = Quaternion.CreateFromAxisAngle(
 
 var viewProjection = camera.ViewMatrix * camera.ProjectionMatrix;
 
+// Sun-like directional light over the scene. The shadow volume covers
+// the whole ground plane and every model instance.
+
+var directionalLight = new DirectionalLight
+{
+    Direction = Vector3.Normalize(new Vector3(0.5f, -1.0f, 0.35f)),
+    Color = new Vector3(1.0f, 0.96f, 0.92f),
+    AmbientStrength = 0.35f,
+};
+
+var lightViewProjection = directionalLight.CreateShadowViewProjection(
+    extent: 20.0f,
+    distance: 40.0f,
+    nearPlane: 1.0f,
+    farPlane: 100.0f);
+
 // The sky containers center on the camera position: the sky box draws
 // through its single composite transform, the sky dome supplies the
-// same matrices separately through the textured scene program.
+// same matrices separately through the lit scene program.
 
 var skyMatrix = Matrix4x4.CreateTranslation(camera.Transform.Position);
 
@@ -269,7 +345,11 @@ SimpleRenderer? renderer = null;
 
 IShaderProgram? shaderProgram = null;
 
+IShaderProgram? shadowShaderProgram = null;
+
 IShaderProgram? skyBoxShaderProgram = null;
+
+IShadowRenderTarget? shadowRenderTarget = null;
 
 ITextureCubeMap? skyBoxTexture = null;
 
@@ -298,6 +378,12 @@ window.Run((currentWindow, deltaTime) =>
         skyBoxShaderProgram = renderer.CreateShaderProgram(
             SkyBoxVertexShaderSource,
             SkyBoxFragmentShaderSource);
+
+        shadowShaderProgram = renderer.CreateShaderProgram(
+            ShadowVertexShaderSource,
+            ShadowFragmentShaderSource);
+
+        shadowRenderTarget = renderer.CreateShadowRenderTarget(1024);
 
         renderer.SetViewport(1280, 720);
 
@@ -509,8 +595,42 @@ window.Run((currentWindow, deltaTime) =>
 
     renderer!.Clear(0.1f, 0.15f, 0.35f, 1.0f);
 
+    // Shadow pass: depth of the ground and the models from the light.
+
+    shadowRenderTarget!.Begin();
+
+    foreach (var item in sceneItems)
+    {
+        renderer.DrawTriangles(
+            item.Buffer,
+            shadowShaderProgram!,
+            "transform",
+            item.Transform.WorldMatrix * lightViewProjection);
+    }
+
+    shadowRenderTarget.End();
+
+    // The shadow pass left the shadow map's viewport active; restore
+    // the backbuffer viewport before drawing the scene.
+
+    renderer.SetViewport(1280, 720);
+
+    // Configure the lit scene program once per frame: the light
+    // globals and the shadow map on unit 1. Sampler uniforms require
+    // the program to be bound first.
+
+    shaderProgram!.Use();
+    shaderProgram.SetUniform("uLightViewProj", lightViewProjection);
+    shaderProgram.SetUniform("uLightDirection", directionalLight.DirectionToLight);
+    shaderProgram.SetUniform("uLightColor", directionalLight.Color);
+    shaderProgram.SetUniform("uAmbient", directionalLight.AmbientStrength);
+    shaderProgram.SetUniform("uShadowMap", 1);
+
+    shadowRenderTarget.BindDepth(1);
+
     // The sky renders first at far radius; the scene draws over it.
-    // The dome shares the textured scene program.
+    // The dome shares the lit scene program: outside the shadow volume
+    // it is fully lit, so it stays unaffected by the shadow test.
 
     if (skyMode == SkyMode.Dome)
     {

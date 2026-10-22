@@ -346,7 +346,10 @@ before the next; engine additions ride along in Core/Infrastructure):
 - [x] Step 3 - Sky containers: sky box AND sky dome both loadable,
       S key cycles Off / Dome / Box; desert cube map, midafternoon
       panorama (all three modes capture-verified)
-- [ ] Step 4 - Directional light + shadow maps
+- [x] Step 4 - Directional light + shadow maps (sun-like light over
+      the scene, depth-only shadow render target, Lambert diffuse with
+      a manual depth-compare shadow test; capture-verified: cow/
+      cross/cube shadows correct, no acne)
 - [ ] Step 5 - Debug containers + toggles: wireframe triangles, texture
       visibility, AABB/OBB/Sphere containers (keys 0/8/9)
 - [ ] Step 6 - 3D sound at a scene emitter
