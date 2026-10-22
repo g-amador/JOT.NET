@@ -205,7 +205,7 @@ Phase 2 — Core validation checklists (disposable smoke harnesses):
 
 ```bash
 dotnet run --project src/demos/smoke/CoreRenderingSmoke
-dotnet run --project src/demos/smoke/CoreAudioSmoke
+dotnet run --project src/demos/examples/AudioDemo
 ```
 
 Math (JOT.Core.Math) — build-validated:
@@ -225,7 +225,7 @@ Rendering (CoreRenderingSmoke) — runtime-validated:
 - [ ] SimpleRenderer draws meshes through a camera's view and projection matrices.
 - [ ] A triangle renders for 120 frames and the application exits cleanly (exit 0).
 
-Audio (CoreAudioSmoke) — runtime-validated:
+Audio (AudioDemo) — runtime-validated:
 - [ ] Native OpenAL binaries are provisioned for the harness (OpenAL.Soft).
 - [ ] Audio device opens successfully (OpenAL device and context lifecycle).
 - [ ] Listener position and orientation are applied to the device.

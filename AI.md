@@ -86,10 +86,11 @@ JOT.NET/
     │       ├── JOT.Client.Desktop.csproj
     │       └── Program.cs
     ├── demos/
+    │   ├── examples/
+    │   │   └── AudioDemo/
+    │   │       ├── AudioDemo.csproj
+    │   │       └── Program.cs
     │   ├── smoke/
-    │   │   ├── CoreAudioSmoke/
-    │   │   │   ├── CoreAudioSmoke.csproj
-    │   │   │   └── Program.cs
     │   │   └── CoreRenderingSmoke/
     │   │       ├── CoreRenderingSmoke.csproj
     │   │       └── Program.cs
@@ -358,7 +359,7 @@ Phase 2 completion criteria have been satisfied:
 
 1. JOT.Core.Math: engine concepts on System.Numerics (Transform, Ray, Plane, AxisAlignedBoundingBox, OrientedBoundingBox, BoundingSphere, Frustum), including frustum extraction and box/sphere/ray intersection helpers. Build validated.
 2. JOT.Core.Rendering: first Core-side implementation (Mesh, SimpleRenderer) on the Infrastructure glue. Runtime validated: 120 frame triangle render, clean exit (CoreRenderingSmoke).
-3. JOT.Core.Audio: positional audio (Listener, SoundEmitter, WaveFile) on the Infrastructure audio glue. Runtime validated: device, listener, WAV assets, and engine-synthesized melodies play positionally, clean exit (CoreAudioSmoke; criteria checklist below).
+3. JOT.Core.Audio: positional audio (Listener, SoundEmitter, WaveFile) on the Infrastructure audio glue. Runtime validated: device, listener, WAV assets, and engine-synthesized melodies play positionally, clean exit (AudioDemo; criteria checklist below).
 
 Build and runtime validation have been performed.
 
@@ -383,7 +384,7 @@ Rendering (CoreRenderingSmoke):
 - [ ] SimpleRenderer draws meshes through a camera's view and projection matrices.
 - [ ] A triangle renders for 120 frames and the application exits cleanly (exit 0).
 
-Audio (CoreAudioSmoke):
+Audio (AudioDemo):
 - [ ] Native OpenAL binaries are provisioned for the harness (OpenAL.Soft).
 - [ ] Audio device opens successfully (OpenAL device and context lifecycle).
 - [ ] Listener position and orientation are applied to the device.
@@ -455,19 +456,45 @@ engine-synthesized melodies, positional playback, early stop, clean exit).
 
 The purpose of CoreTemplate is to prove the architecture end-to-end.
 
+The scene mirrors the original Java JOT template: a textured ground
+plane with textured models standing in wireframe debug containers
+(AABB, OBB, or Sphere envelopes), a selectable sky container filling
+the horizon, and directional light casting shadows. Additional
+validation features may be added as long as they depend at most on
+Core.
+
 Success criteria:
 1. Open a window.
 2. Close with Escape.
-3. 3D sound
-4. Multiple camera views
-5. Light effects (e.g., shadows, night/day)
-6. Model loading
-7. Sky box/sphere loading
-8. Toggle on/off showing textures
-9. Toggle on/off showing triangles
-10. Toggle on/off showing AABB, OBB, or Sphere
+3. 3D sound.
+4. Multiple camera views.
+5. Light effects (e.g., directional shadows on the ground).
+6. Model loading cow, brick cube, fighter, cone from assets/models.
+7. Sky box OR sky dome: selectable off, box, or dome, textured from one sky texture in assets/textures.
+8. Toggle on/off showing textures.
+9. Toggle on/off showing triangles (wireframe).
+10. Toggle on/off showing AABB, OBB, or Sphere debug containers.
 
 Nothing more.
+
+Asset placeholder names (models land in assets/models, textures in
+assets/textures; real files arrive later and the template resolves
+them by path, failing loudly with a clear message when missing):
+
+| File                          | Placeholder   | Used for                     |
+|-------------------------------|---------------|------------------------------|
+| assets/models/cow.obj         | cow           | grazed model with a bell     |
+| assets/models/brick_cube.obj  | brick cube    | textured cubes               |
+| assets/models/fighter.obj     | fighter       | spacecraft model             |
+| assets/models/cone.obj        | mountain cone | cone next to a test emitter  |
+| assets/textures/cow.png       | cow material  | cow model material           |
+| assets/textures/brick.png     | brick         | cube faces                   |
+| assets/textures/grass.png     | grass         | textured ground plane        |
+| assets/textures/clouds.png    | clouds sky    | the active sky container     |
+
+The ground plane is built procedurally (no model file required).
+Wireframe debug containers and the ground grid reuse Geometry from
+JOT.Core.Math.
 
 # EXPLICIT NON-GOALS
 

@@ -47,10 +47,11 @@ JOT.NET/
     │       ├── JOT.Client.Desktop.csproj
     │       └── Program.cs
     ├── demos/
+    │   ├── examples/
+    │   │   └── AudioDemo/
+    │   │       ├── AudioDemo.csproj
+    │   │       └── Program.cs
     │   ├── smoke/
-    │   │   ├── CoreAudioSmoke/
-    │   │   │   ├── CoreAudioSmoke.csproj
-    │   │   │   └── Program.cs
     │   │   └── CoreRenderingSmoke/
     │   │       ├── CoreRenderingSmoke.csproj
     │   │       └── Program.cs
