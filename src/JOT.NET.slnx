@@ -12,7 +12,7 @@
     <Project Path="engine/core/JOT.Core.Util/JOT.Core.Util.csproj" />
   </Folder>
   <Folder Name="/Demos/">
-    <Project Path="demos/smoke/CoreAudioSmoke/CoreAudioSmoke.csproj" />
+    <Project Path="demos/examples/AudioDemo/AudioDemo.csproj" />
     <Project Path="demos/smoke/CoreRenderingSmoke/CoreRenderingSmoke.csproj" />
   </Folder>
   <Folder Name="/Framework/">

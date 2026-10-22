@@ -1,5 +1,4 @@
-// Disposable validation harness for Phase 2, Step 3.
-// Proves the Core audio pipeline end to end on Infrastructure glue:
+// Showcase demo for the Core audio pipeline, kept permanently:
 // device -> listener -> positional sound emitter.
 // Menu-driven with number keys: 1 procedural sine wave, 2 real .wav
 // asset, 3 Super Mario theme, 4 Tetris theme, 5 Zelda (Song of Storms). Everything plays through
