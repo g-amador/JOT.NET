@@ -12,6 +12,11 @@ public enum KeyCode
 
     S,
 
+    /// <summary>Digit zero key (named after the Silk.NET mapping).</summary>
+    Number0,
+    Number8,
+    Number9,
+
     Left,
     Right,
     Up,

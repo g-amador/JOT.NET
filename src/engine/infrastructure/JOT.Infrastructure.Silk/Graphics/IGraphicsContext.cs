@@ -122,4 +122,26 @@ public interface IGraphicsContext
     /// </param>
     void DrawTriangles(
         IVertexBuffer vertexBuffer);
+
+    /// <summary>
+    /// Draws line segments from the specified vertex buffer: two
+    /// consecutive vertices per segment, sharing the vertex layout of
+    /// triangle buffers.
+    /// </summary>
+    /// <param name="vertexBuffer">
+    /// Vertex buffer with the line geometry to draw.
+    /// </param>
+    void DrawLines(
+        IVertexBuffer vertexBuffer);
+
+    /// <summary>
+    /// Toggles wireframe rendering of triangle geometry: enabled draws
+    /// only the triangle edges as lines, disabled renders filled
+    /// triangles. Applies to subsequent triangle draws until toggled.
+    /// </summary>
+    /// <param name="enabled">
+    /// Whether triangles render as wireframe (true) or filled (false).
+    /// </param>
+    void SetWireframe(
+        bool enabled);
 }

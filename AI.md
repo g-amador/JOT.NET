@@ -350,6 +350,12 @@ before the next; engine additions ride along in Core/Infrastructure):
       the scene, depth-only shadow render target, Lambert diffuse with
       a manual depth-compare shadow test; capture-verified: cow/
       cross/cube shadows correct, no acne)
+- [x] Step 5 - Debug toggles: key 8 toggles texture visibility
+      (white 1x1 placeholder over models and ground), key 9 toggles
+      wireframe triangle rendering, key 0 toggles white wireframe
+      bounding containers around every model (local bounds through the
+      JOT.Core.Math AABB transform, drawn as GL line pairs; all three
+      toggles capture-verified)
 - [ ] Step 5 - Debug containers + toggles: wireframe triangles, texture
       visibility, AABB/OBB/Sphere containers (keys 0/8/9)
 - [ ] Step 6 - 3D sound at a scene emitter

@@ -134,6 +134,34 @@ public sealed class SilkGraphicsContext : IGraphicsContext
             (uint)silkVertexBuffer.VertexCount);
     }
 
+    /// <inheritdoc/>
+    public void DrawLines(
+        IVertexBuffer vertexBuffer)
+    {
+        if (vertexBuffer is not SilkVertexBuffer silkVertexBuffer)
+        {
+            throw new ArgumentException(
+                "Unsupported vertex buffer type.",
+                nameof(vertexBuffer));
+        }
+
+        silkVertexBuffer.Use();
+
+        _gl.DrawArrays(
+            PrimitiveType.Lines,
+            0,
+            (uint)silkVertexBuffer.VertexCount);
+    }
+
+    /// <inheritdoc/>
+    public void SetWireframe(
+        bool enabled)
+    {
+        _gl.PolygonMode(
+            TriangleFace.FrontAndBack,
+            enabled ? PolygonMode.Line : PolygonMode.Fill);
+    }
+
     private uint CompileShader(
         ShaderType type,
         string source)

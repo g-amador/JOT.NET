@@ -172,6 +172,21 @@ public sealed class SimpleRenderer
     /// <param name="transform">
     /// Transform matrix applied to the geometry.
     /// </param>
+    /// <summary>
+    /// Draws triangles from the specified vertex buffer.
+    /// </summary>
+    /// <param name="vertexBuffer">
+    /// Vertex buffer with the geometry to draw.
+    /// </param>
+    /// <param name="shaderProgram">
+    /// Shader program used to draw the geometry.
+    /// </param>
+    /// <param name="uniformName">
+    /// Name of the matrix uniform that receives the transform.
+    /// </param>
+    /// <param name="transform">
+    /// Transform matrix applied to the geometry.
+    /// </param>
     public void DrawTriangles(
         IVertexBuffer vertexBuffer,
         IShaderProgram shaderProgram,
@@ -187,6 +202,85 @@ public sealed class SimpleRenderer
             transform);
 
         _graphics.DrawTriangles(vertexBuffer);
+    }
+
+    /// <summary>
+    /// Draws line segments from the specified vertex buffer, applying
+    /// the given transform. Used by debug containers drawn over the
+    /// scene.
+    /// </summary>
+    /// <param name="vertexBuffer">
+    /// Vertex buffer with the line geometry to draw.
+    /// </param>
+    /// <param name="shaderProgram">
+    /// Shader program used to draw the geometry.
+    /// </param>
+    /// <param name="uniformName">
+    /// Name of the matrix uniform that receives the transform.
+    /// </param>
+    /// <param name="transform">
+    /// Transform matrix applied to the geometry.
+    /// </param>
+    public void DrawLines(
+        IVertexBuffer vertexBuffer,
+        IShaderProgram shaderProgram,
+        string uniformName,
+        Matrix4x4 transform)
+    {
+        ArgumentNullException.ThrowIfNull(vertexBuffer);
+        ArgumentNullException.ThrowIfNull(shaderProgram);
+
+        shaderProgram.Use();
+        shaderProgram.SetUniform(
+            uniformName,
+            transform);
+
+        _graphics.DrawLines(vertexBuffer);
+    }
+
+    /// <summary>
+    /// Draws line segments from the specified vertex buffer, applying
+    /// the given view-projection and model matrices. Used by debug
+    /// containers drawn over the scene.
+    /// </summary>
+    /// <param name="vertexBuffer">
+    /// Vertex buffer with the line geometry to draw.
+    /// </param>
+    /// <param name="shaderProgram">
+    /// Shader program used to draw the geometry.
+    /// </param>
+    /// <param name="viewProjectionUniformName">
+    /// Name of the matrix uniform that receives the view-projection.
+    /// </param>
+    /// <param name="viewProjection">
+    /// View-projection matrix of the camera.
+    /// </param>
+    /// <param name="modelUniformName">
+    /// Name of the matrix uniform that receives the model transform.
+    /// </param>
+    /// <param name="model">
+    /// Model matrix applied to the geometry.
+    /// </param>
+    public void DrawLines(
+        IVertexBuffer vertexBuffer,
+        IShaderProgram shaderProgram,
+        string viewProjectionUniformName,
+        Matrix4x4 viewProjection,
+        string modelUniformName,
+        Matrix4x4 model)
+    {
+        ArgumentNullException.ThrowIfNull(vertexBuffer);
+        ArgumentNullException.ThrowIfNull(shaderProgram);
+
+        shaderProgram.Use();
+        shaderProgram.SetUniform(
+            viewProjectionUniformName,
+            viewProjection);
+        shaderProgram.SetUniform(
+            modelUniformName,
+            model);
+
+        _graphics.DrawLines(vertexBuffer);
     }
 
     /// <summary>
@@ -244,6 +338,20 @@ public sealed class SimpleRenderer
         int size)
     {
         return _graphics.CreateShadowRenderTarget(size);
+    }
+
+    /// <summary>
+    /// Toggles wireframe rendering of triangle geometry: enabled draws
+    /// only the triangle edges as lines, disabled renders filled
+    /// triangles. Applies to subsequent triangle draws until toggled.
+    /// </summary>
+    /// <param name="enabled">
+    /// Whether triangles render as wireframe (true) or filled (false).
+    /// </param>
+    public void SetWireframe(
+        bool enabled)
+    {
+        _graphics.SetWireframe(enabled);
     }
 
     /// <summary>

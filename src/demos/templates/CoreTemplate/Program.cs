@@ -1,9 +1,12 @@
 ﻿// The JOT.NET Core Template validation program (AI.md success criteria);
-// currently at Step 4: sun-like directional light casting shadow maps
-// ground and textured models, sky containers selectable through the S
-// key (Off / Dome / Box).
+// currently at Step 5: debug toggles — key 8 toggles texture
+// visibility (models render white without textures), key 9 toggles
+// wireframe triangle rendering, and key 0 toggles white wireframe
+// bounding containers around every model, built through the JOT.Core.Math
+// AABB math.
 
 using System.Numerics;
+using JOT.Core.Math.Geometry;
 using JOT.Core.Math.Transformations;
 using JOT.Core.Rendering.Cameras;
 using JOT.Core.Rendering.Lights;
@@ -113,6 +116,41 @@ const string ShadowFragmentShaderSource = """
     void main()
     {
         fragmentColor = vec4(1.0);
+    }
+    """;
+
+// The container program draws white wireframe containers: position and
+// color only, spanning the fixed vertex layout.
+
+const string ContainerVertexShaderSource = """
+    #version 330 core
+
+    layout (location = 0) in vec3 position;
+    layout (location = 1) in vec3 color;
+
+    uniform mat4 uViewProjection;
+    uniform mat4 uModel;
+
+    out vec3 vertexColor;
+
+    void main()
+    {
+        vertexColor = color;
+
+        gl_Position = uViewProjection * (uModel * vec4(position, 1.0));
+    }
+    """;
+
+const string ContainerFragmentShaderSource = """
+    #version 330 core
+
+    in vec3 vertexColor;
+
+    out vec4 fragmentColor;
+
+    void main()
+    {
+        fragmentColor = vec4(vertexColor, 1.0);
     }
     """;
 
@@ -260,6 +298,66 @@ Transform CreateTransform(
     return transform;
 }
 
+// Builds the white wireframe container of one model instance: the local
+// bounds of the baked triangles go through the JOT.Core.Math AABB,
+// transformed by the instance world matrix, then become the 12 box
+// edges as line-pair vertices in the shared layout.
+
+float[] CreateContainerVertices(
+    Vector3 localMin,
+    Vector3 localMax,
+    Matrix4x4 world)
+{
+    var box = new AxisAlignedBoundingBox(localMin, localMax)
+        .Transform(world);
+
+    var corners = new Vector3[8];
+
+    for (var i = 0; i < 8; ++i)
+    {
+        corners[i] = new Vector3(
+            (i & 1) == 0 ? box.Min.X : box.Max.X,
+            (i & 2) == 0 ? box.Min.Y : box.Max.Y,
+            (i & 4) == 0 ? box.Min.Z : box.Max.Z);
+    }
+
+    // The 12 edges as corner index pairs.
+
+    Span<int> edges =
+    [
+        0, 1, 1, 3, 3, 2, 2, 0, // bottom face
+        4, 5, 5, 7, 7, 6, 6, 4, // top face
+        0, 4, 1, 5, 2, 6, 3, 7, // pillars
+    ];
+
+    var vertices = new float[edges.Length * Mesh.ComponentsPerVertex];
+
+    for (var i = 0; i < edges.Length; ++i)
+    {
+        var corner = corners[edges[i]];
+
+        var vertex = i * Mesh.ComponentsPerVertex;
+
+        vertices[vertex + 0] = corner.X;
+        vertices[vertex + 1] = corner.Y;
+        vertices[vertex + 2] = corner.Z;
+
+        // White containers; normal and uv are placeholders required by
+        // the shared vertex layout.
+
+        vertices[vertex + 3] = 1.0f;
+        vertices[vertex + 4] = 1.0f;
+        vertices[vertex + 5] = 1.0f;
+        vertices[vertex + 6] = 0.0f;
+        vertices[vertex + 7] = 1.0f;
+        vertices[vertex + 8] = 0.0f;
+        vertices[vertex + 9] = 0.0f;
+        vertices[vertex + 10] = 0.0f;
+    }
+
+    return vertices;
+}
+
 string FindAssetsDirectory()
 {
     var directory = new DirectoryInfo(AppContext.BaseDirectory);
@@ -351,6 +449,10 @@ IShaderProgram? skyBoxShaderProgram = null;
 
 IShadowRenderTarget? shadowRenderTarget = null;
 
+IShaderProgram? containerShaderProgram = null;
+
+ITexture2D? modelsTextureOff = null;
+
 ITextureCubeMap? skyBoxTexture = null;
 
 ITexture2D? skyDomeTexture = null;
@@ -362,6 +464,14 @@ IVertexBuffer? skyDomeBuffer = null;
 var skyMode = SkyMode.Dome;
 
 var sceneItems = new List<SceneItem>();
+
+var containerItems = new List<SceneItem>();
+
+var showTextures = true;
+
+var showContainers = false;
+
+var wireframeTriangles = false;
 
 var frameCount = 0;
 
@@ -384,6 +494,15 @@ window.Run((currentWindow, deltaTime) =>
             ShadowFragmentShaderSource);
 
         shadowRenderTarget = renderer.CreateShadowRenderTarget(1024);
+
+        containerShaderProgram = renderer.CreateShaderProgram(
+            ContainerVertexShaderSource,
+            ContainerFragmentShaderSource);
+
+        // White 1x1 texture for the texture-visibility toggle; drawn
+        // over every model when textures are hidden.
+
+        modelsTextureOff = renderer.CreateTexture(1, 1, [byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue]);
 
         renderer.SetViewport(1280, 720);
 
@@ -491,17 +610,48 @@ window.Run((currentWindow, deltaTime) =>
                     instance.TextureDirectory,
                     instance.TextureFile));
 
+            // Walk instance triangles once for both the container
+            // bounds and the debug containers list.
+
+            var localMin = new Vector3(float.MaxValue);
+            var localMax = new Vector3(float.MinValue);
+
             foreach (var mesh in model.Meshes)
             {
+                var baked = BakeMeshVertices(mesh);
+
                 sceneItems.Add(
                     new SceneItem(
                         renderer.CreateVertexBuffer(
                             new Mesh(
                                 mesh.Name,
-                                BakeMeshVertices(mesh))),
+                                baked)),
                         texture,
                         instance.Transform));
+
+                for (var v = 0; v < baked.Length; v += Mesh.ComponentsPerVertex)
+                {
+                    var position = new Vector3(
+                        baked[v + 0],
+                        baked[v + 1],
+                        baked[v + 2]);
+
+                    localMin = Vector3.Min(localMin, position);
+                    localMax = Vector3.Max(localMax, position);
+                }
             }
+
+            containerItems.Add(
+                new SceneItem(
+                    renderer.CreateVertexBuffer(
+                        new Mesh(
+                            $"{model.Name} container",
+                            CreateContainerVertices(
+                                localMin,
+                                localMax,
+                                instance.Transform.WorldMatrix))),
+                    modelsTextureOff!,
+                    new Transform()));
         }
 
         // Sky dome: panoramic texture on the hemisphere geometry.
@@ -664,8 +814,52 @@ window.Run((currentWindow, deltaTime) =>
             viewProjection,
             "uModel",
             item.Transform.WorldMatrix,
-            item.Texture,
+            showTextures ? item.Texture : modelsTextureOff!,
             "uTexture");
+    }
+
+    // Debug containers draw last, on top, unaffected by lighting.
+
+    if (showContainers)
+    {
+        foreach (var container in containerItems)
+        {
+            renderer.DrawLines(
+                container.Buffer,
+                containerShaderProgram!,
+                "uViewProjection",
+                viewProjection,
+                "uModel",
+                container.Transform.WorldMatrix);
+        }
+    }
+
+    // Debug toggle keys: 8 texture visibility, 9 wireframe triangles,
+    // 0 wireframe containers.
+
+    var keyboard = currentWindow.Input.Keyboard;
+
+    if (keyboard.IsKeyPressed(KeyCode.Number8))
+    {
+        showTextures = !showTextures;
+
+        Console.WriteLine($"Textures visible: {showTextures}.");
+    }
+
+    if (keyboard.IsKeyPressed(KeyCode.Number9))
+    {
+        wireframeTriangles = !wireframeTriangles;
+
+        renderer.SetWireframe(wireframeTriangles);
+
+        Console.WriteLine($"Wireframe triangles: {wireframeTriangles}.");
+    }
+
+    if (keyboard.IsKeyPressed(KeyCode.Number0))
+    {
+        showContainers = !showContainers;
+
+        Console.WriteLine($"Containers visible: {showContainers}.");
     }
 
     if (currentWindow.Input.Keyboard.IsKeyPressed(KeyCode.Escape)
@@ -676,6 +870,7 @@ window.Run((currentWindow, deltaTime) =>
         Console.WriteLine($"Template closed normally after {frameCount} frames.");
     }
 });
+
 
 // Identifies one textured, positioned entry of the scene composition.
 
