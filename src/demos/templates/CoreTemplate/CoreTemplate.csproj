@@ -8,7 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\engine\core\JOT.Core.Rendering\JOT.Core.Rendering.csproj" />
     <ProjectReference Include="..\..\..\engine\infrastructure\JOT.Infrastructure.Silk\JOT.Infrastructure.Silk.csproj" />
+    <ProjectReference Include="..\..\..\engine\infrastructure\JOT.Infrastructure.Assimp\JOT.Infrastructure.Assimp.csproj" />
   </ItemGroup>
 
 </Project>

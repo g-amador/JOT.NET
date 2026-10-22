@@ -328,11 +328,27 @@ Optional higher-level features:
 Roadmap progress:
 ✅ Phase 1 - Infrastructure
 ✅ Phase 2 - Core
-⬜ Core Template validation (Next)
+⬜ Core Template validation (In progress: Step 1 complete)
 ⬜ Phase 3 - Toolkits
 ⬜ Phase 4 - Framework
 ⬜ Phase 5 - MMO Prototype
 ⬜ Phase 6 - Browser Client
+
+Core Template step sequence (each step runtime-validated in CoreTemplate
+before the next; engine additions ride along in Core/Infrastructure):
+
+- [x] Step 1 - Camera + textured ground plane (texture glue: image
+      loader, ITexture2D, ShaderProgram sampler/float uniforms, extended
+      vertex layout pos+color+normal+uv)
+- [ ] Step 2 - Model loading from assets/models (Assimp importer glue)
+- [ ] Step 3 - Sky containers: sky box AND sky dome, selectable
+      Off / Dome / Box (S key), textured from assets/textures
+- [ ] Step 4 - Directional light + shadow maps
+- [ ] Step 5 - Debug containers + toggles: wireframe triangles, texture
+      visibility, AABB/OBB/Sphere containers (keys 0/8/9)
+- [ ] Step 6 - 3D sound at a scene emitter
+- [ ] Step 7 - Multiple camera views
+- [ ] Step 8 - Core Template closure (checklist confirmation)
 
 # CURRENT STATUS
 
@@ -470,7 +486,9 @@ Success criteria:
 4. Multiple camera views.
 5. Light effects (e.g., directional shadows on the ground).
 6. Model loading cow, brick cube, fighter, cone from assets/models.
-7. Sky box OR sky dome: selectable off, box, or dome, textured from one sky texture in assets/textures.
+7. Sky box AND sky dome: both loadable; select sky mode Off, Dome, or
+   Box; each container is textured from one sky texture set in
+   assets/textures.
 8. Toggle on/off showing textures.
 9. Toggle on/off showing triangles (wireframe).
 10. Toggle on/off showing AABB, OBB, or Sphere debug containers.
@@ -481,16 +499,20 @@ Asset placeholder names (models land in assets/models, textures in
 assets/textures; real files arrive later and the template resolves
 them by path, failing loudly with a clear message when missing):
 
-| File                          | Placeholder   | Used for                     |
-|-------------------------------|---------------|------------------------------|
-| assets/models/cow.obj         | cow           | grazed model with a bell     |
-| assets/models/brick_cube.obj  | brick cube    | textured cubes               |
-| assets/models/fighter.obj     | fighter       | spacecraft model             |
-| assets/models/cone.obj        | mountain cone | cone next to a test emitter  |
-| assets/textures/cow.png       | cow material  | cow model material           |
-| assets/textures/brick.png     | brick         | cube faces                   |
-| assets/textures/grass.png     | grass         | textured ground plane        |
-| assets/textures/clouds.png    | clouds sky    | the active sky container     |
+| File                              | Placeholder   | Used for                     |
+|-----------------------------------|---------------|------------------------------|
+| assets/models/cow.obj             | cow           | grazed model with a bell     |
+| assets/models/brick_cube.obj      | brick cube    | textured cubes               |
+| assets/models/fighter.obj         | fighter       | spacecraft model             |
+| assets/models/cone.obj            | mountain cone | cone next to a test emitter  |
+| assets/models/cow/cow.dae         | cow (mesh)    | real-textured cow variant    |
+| assets/textures/materials/*       | materials     | per-model material textures  |
+| assets/textures/skybox/desert     | desert sky    | the active sky box container |
+| assets/textures/skydome/*.jpg     | panorama sky  | the active sky dome container|
+
+Model and material placeholder names resolve by path and fail loudly
+with a clear message when missing; real files may replace the
+placeholders under the same names at any time.
 
 The ground plane is built procedurally (no model file required).
 Wireframe debug containers and the ground grid reuse Geometry from

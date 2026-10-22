@@ -10,6 +10,8 @@ public enum KeyCode
     B,
     C,
 
+    S,
+
     Left,
     Right,
     Up,

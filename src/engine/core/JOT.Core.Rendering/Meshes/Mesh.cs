@@ -4,14 +4,17 @@ namespace JOT.Core.Rendering.Meshes;
 /// Represents renderable mesh geometry with interleaved vertices.
 ///
 /// The vertex layout is fixed: attribute 0 is an XYZ position and
-/// attribute 1 is an RGB color, both as three floats per vertex.
+/// attribute 1 is an RGB color, both as three floats per vertex,
+/// followed by attribute 2, an XYZ normal as three floats
+/// per vertex, and attribute 3, a UV coordinate as two floats
+/// per vertex.
 /// </summary>
 public sealed class Mesh : IMesh
 {
     /// <summary>
     /// Gets the number of float components per vertex.
     /// </summary>
-    public const int ComponentsPerVertex = 6;
+    public const int ComponentsPerVertex = 11;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Mesh"/> class.

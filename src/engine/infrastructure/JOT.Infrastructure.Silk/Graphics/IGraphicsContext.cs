@@ -38,16 +38,81 @@ public interface IGraphicsContext
     /// Uploads the specified vertex data to the graphics device.
     ///
     /// The vertex layout is fixed: attribute 0 is an XYZ position and
-    /// attribute 1 is an RGB color, both as three floats per vertex.
+    /// attribute 1 is an RGB color, both as three floats per vertex,
+    /// followed by attribute 2, a UV coordinate as two floats
+    /// per vertex.
     /// </summary>
     /// <param name="vertices">
-    /// Interleaved vertex data. The length must be a multiple of six.
+    /// Interleaved vertex data. The length must be a multiple of eight.
     /// </param>
     /// <returns>
     /// The uploaded vertex buffer.
     /// </returns>
     IVertexBuffer CreateVertexBuffer(
         float[] vertices);
+
+    /// <summary>
+    /// Uploads the specified RGBA pixel data to the graphics device
+    /// as a 2D texture.
+    /// </summary>
+    /// <param name="width">Texture width in pixels.</param>
+    /// <param name="height">Texture height in pixels.</param>
+    /// <param name="pixels">
+    /// RGBA pixel data. The length must be exactly
+    /// <c>width * height * 4</c> bytes.
+    /// </param>
+    /// <returns>
+    /// The uploaded texture.
+    /// </returns>
+    ITexture2D CreateTexture(
+        int width,
+        int height,
+        byte[] pixels);
+
+    /// <summary>
+    /// Uploads the specified cube map faces to the graphics device
+    /// as a cube map texture.
+    ///
+    /// The faces are uploaded in the OpenGL cube map order:
+    /// positive X, negative X, positive Y, negative Y, positive Z,
+    /// negative Z.
+    /// </summary>
+    /// <param name="width">Face width in pixels.</param>
+    /// <param name="height">Face height in pixels.</param>
+    /// <param name="faces">
+    /// Face pixel data in cube map order. Every entry holds exactly
+    /// <c>width * height * 4</c> bytes of RGBA data.
+    /// </param>
+    /// <returns>
+    /// The uploaded cube map texture.
+    /// </returns>
+    ITextureCubeMap CreateTextureCubeMap(
+        int width,
+        int height,
+        byte[][] faces);
+
+    /// <summary>
+    /// Creates a shadow render target: a framebuffer holding only a
+    /// depth attachment of the specified size, used as the depth pass
+    /// target for shadow map rendering and as the sampled shadow map.
+    /// </summary>
+    /// <param name="size">
+    /// Depth texture size in pixels (square).
+    /// </param>
+    /// <returns>
+    /// The shadow render target.
+    /// </returns>
+    IShadowRenderTarget CreateShadowRenderTarget(
+        int size);
+
+    /// <summary>
+    /// Sets the viewport region of the current render target.
+    /// </summary>
+    /// <param name="width">Viewport width in pixels.</param>
+    /// <param name="height">Viewport height in pixels.</param>
+    void SetViewport(
+        int width,
+        int height);
 
     /// <summary>
     /// Draws triangles from the specified vertex buffer.

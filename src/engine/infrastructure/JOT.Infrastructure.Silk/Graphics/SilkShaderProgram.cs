@@ -46,8 +46,10 @@ internal sealed class SilkShaderProgram : IShaderProgram
                 $"Uniform '{name}' does not exist in the shader program.");
         }
 
-        // System.Numerics matrices are stored row-major, so the values are
-        // transposed on upload to match OpenGL column-major layout.
+        // System.Numerics matrices use row-vector semantics (v * M) with
+        // row-major storage. OpenGL applies column vectors (M^T * v), so
+        // uploading with transpose=false makes GL read the array as
+        // column-major, yielding the transposed matrix the shaders need.
         Span<float> values =
         [
             matrix.M11, matrix.M12, matrix.M13, matrix.M14,
@@ -58,7 +60,59 @@ internal sealed class SilkShaderProgram : IShaderProgram
 
         _gl.UniformMatrix4(
             location,
-            true,
+            false,
             values);
+    }
+
+    /// <inheritdoc/>
+    public void SetUniform(
+        string name,
+        Vector3 value)
+    {
+        var location = _gl.GetUniformLocation(_program, name);
+
+        if (location < 0)
+        {
+            throw new InvalidOperationException(
+                $"Uniform '{name}' does not exist in the shader program.");
+        }
+
+        _gl.Uniform3(
+            location,
+            value.X,
+            value.Y,
+            value.Z);
+    }
+
+    /// <inheritdoc/>
+    public void SetUniform(
+        string name,
+        float value)
+    {
+        var location = _gl.GetUniformLocation(_program, name);
+
+        if (location < 0)
+        {
+            throw new InvalidOperationException(
+                $"Uniform '{name}' does not exist in the shader program.");
+        }
+
+        _gl.Uniform1(location, value);
+    }
+
+    /// <inheritdoc/>
+    public void SetUniform(
+        string name,
+        int value)
+    {
+        var location = _gl.GetUniformLocation(_program, name);
+
+        if (location < 0)
+        {
+            throw new InvalidOperationException(
+                $"Uniform '{name}' does not exist in the shader program.");
+        }
+
+        _gl.Uniform1(location, value);
     }
 }

@@ -7,7 +7,7 @@ namespace JOT.Infrastructure.Silk.Graphics;
 /// </summary>
 internal sealed class SilkVertexBuffer : IVertexBuffer
 {
-    private const int ComponentsPerVertex = 6;
+    private const int ComponentsPerVertex = 11;
 
     private const int Stride = ComponentsPerVertex * sizeof(float);
 
@@ -21,7 +21,10 @@ internal sealed class SilkVertexBuffer : IVertexBuffer
     /// Initializes a new instance of the <see cref="SilkVertexBuffer"/> class.
     ///
     /// The vertex layout is fixed: attribute 0 is an XYZ position and
-    /// attribute 1 is an RGB color, both as three floats per vertex.
+    /// attribute 1 is an RGB color, both as three floats per vertex,
+    /// followed by attribute 2, an XYZ normal as three floats
+    /// per vertex, and attribute 3, a UV coordinate as two floats
+    /// per vertex.
     /// </summary>
     /// <param name="gl">OpenGL API instance.</param>
     /// <param name="vertices">
@@ -80,6 +83,26 @@ internal sealed class SilkVertexBuffer : IVertexBuffer
             new IntPtr(3 * sizeof(float)));
 
         _gl.EnableVertexAttribArray(1);
+
+        _gl.VertexAttribPointer(
+            2,
+            3,
+            VertexAttribPointerType.Float,
+            false,
+            (uint)Stride,
+            new IntPtr(6 * sizeof(float)));
+
+        _gl.EnableVertexAttribArray(2);
+
+        _gl.VertexAttribPointer(
+            3,
+            2,
+            VertexAttribPointerType.Float,
+            false,
+            (uint)Stride,
+            new IntPtr(9 * sizeof(float)));
+
+        _gl.EnableVertexAttribArray(3);
     }
 
     /// <inheritdoc/>

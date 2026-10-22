@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="AssimpNet" />
+    <PackageReference Include="StbImageSharp" />
+  </ItemGroup>
+
 </Project>

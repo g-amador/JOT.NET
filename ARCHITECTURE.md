@@ -117,7 +117,16 @@ JOT.NET/
     │   │       └── JOT.Framework.Managers.csproj
     │   ├── infrastructure/
     │   │   ├── JOT.Infrastructure.Assimp/
-    │   │   │   └── JOT.Infrastructure.Assimp.csproj
+    │   │   │   ├── JOT.Infrastructure.Assimp.csproj
+    │   │   │   └── Importing/
+    │   │   │       ├── IImageLoader.cs
+    │   │   │       ├── IModelImporter.cs
+    │   │   │       ├── ImportedMaterial.cs
+    │   │   │       ├── ImportedMesh.cs
+    │   │   │       ├── ImportedModel.cs
+    │   │   │       ├── AssimpModelImporter.cs
+    │   │   │       ├── RawImage.cs
+    │   │   │       └── StbImageLoader.cs
     │   │   ├── JOT.Infrastructure.DotNetty/
     │   │   │   └── JOT.Infrastructure.DotNetty.csproj
     │   │   └── JOT.Infrastructure.Silk/
@@ -130,9 +139,15 @@ JOT.NET/
     │   │       ├── Graphics/
     │   │       │   ├── IGraphicsContext.cs
     │   │       │   ├── IShaderProgram.cs
+    │   │       │   ├── IShadowRenderTarget.cs
+    │   │       │   ├── ITexture2D.cs
+    │   │       │   ├── ITextureCubeMap.cs
     │   │       │   ├── IVertexBuffer.cs
     │   │       │   ├── SilkGraphicsContext.cs
     │   │       │   ├── SilkShaderProgram.cs
+    │   │       │   ├── SilkShadowRenderTarget.cs
+    │   │       │   ├── SilkTexture2D.cs
+    │   │       │   ├── SilkTextureCubeMap.cs
     │   │       │   └── SilkVertexBuffer.cs
     │   │       ├── Input/
     │   │       │   ├── IInputContext.cs

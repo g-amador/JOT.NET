@@ -12,6 +12,8 @@ public sealed class SilkGraphicsContext : IGraphicsContext
     public SilkGraphicsContext(GL gl)
     {
         _gl = gl;
+
+        _gl.Enable(EnableCap.DepthTest);
     }
 
     /// <inheritdoc/>
@@ -28,7 +30,7 @@ public sealed class SilkGraphicsContext : IGraphicsContext
             alpha);
 
         _gl.Clear(
-            ClearBufferMask.ColorBufferBit);
+            ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
     }
 
     /// <inheritdoc/>
@@ -64,6 +66,53 @@ public sealed class SilkGraphicsContext : IGraphicsContext
         float[] vertices)
     {
         return new SilkVertexBuffer(_gl, vertices);
+    }
+
+    /// <inheritdoc/>
+    public ITexture2D CreateTexture(
+        int width,
+        int height,
+        byte[] pixels)
+    {
+        return new SilkTexture2D(
+            _gl,
+            width,
+            height,
+            pixels);
+    }
+
+    /// <inheritdoc/>
+    public ITextureCubeMap CreateTextureCubeMap(
+        int width,
+        int height,
+        byte[][] faces)
+    {
+        return new SilkTextureCubeMap(
+            _gl,
+            width,
+            height,
+            faces);
+    }
+
+    /// <inheritdoc/>
+    public IShadowRenderTarget CreateShadowRenderTarget(
+        int size)
+    {
+        return new SilkShadowRenderTarget(
+            _gl,
+            size);
+    }
+
+    /// <inheritdoc/>
+    public void SetViewport(
+        int width,
+        int height)
+    {
+        _gl.Viewport(
+            0,
+            0,
+            (uint)width,
+            (uint)height);
     }
 
     /// <inheritdoc/>
