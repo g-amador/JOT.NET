@@ -407,6 +407,19 @@ before the next; engine additions ride along in Core/Infrastructure):
       bleeding on the walls, mirror and diffuse objects correct; the
       remaining speckle is the smallpt-style path noise converging
       with sample count.
+- [x] Step 7e - On-screen key options help: the template draws a
+      two-dimensional HUD line over the scene ("8 TEXTURES | 9
+      WIREFRAME | 0 CONTAINERS | S SKY | C CAMERA") through a
+      code-generated 5x7 bitmap font atlas (padded 7x9 cells so the
+      linear filter never crosses glyphs; cell 0 holds the translucent
+      bar texel; unknown characters fail loudly). Engine additions:
+      IGraphicsContext/SimpleRenderer SetBlending (src-alpha blending
+      for the translucent bar) and SetDepthTest (the overlay draws
+      over the scene). HUD quads are baked pre-projected into clip
+      space and sampled texel-center to texel-center; draw order
+      suspends depth test and wireframe, restores both after.
+      Capture-verified: glyphs render correctly over the translucent
+      bar at the bottom-left.
 - [ ] Step 8 - Core Template closure (checklist confirmation)
 
 # CURRENT STATUS
@@ -552,6 +565,7 @@ Success criteria:
 8. Toggle on/off showing textures.
 9. Toggle on/off showing triangles (wireframe).
 10. Toggle on/off showing AABB, OBB, or Sphere debug containers.
+11. On-screen help text listing the available key options.
 
 Nothing more.
 

@@ -155,6 +155,377 @@ const string ContainerFragmentShaderSource = """
     }
     """;
 
+// The HUD program draws the on-screen key options help: quads arrive
+// pre-projected in clip space (the two-dimensional positions are baked
+// onto the fixed vertex layout) and the fragment outputs the atlas
+// color with its alpha; blending mixes it over the scene.
+
+const string HudVertexShaderSource = """
+    #version 330 core
+
+    layout (location = 0) in vec3 position;
+    layout (location = 1) in vec3 color;
+    layout (location = 2) in vec3 normal;
+    layout (location = 3) in vec2 uv;
+
+    uniform mat4 uViewProjection;
+
+    out vec2 vertexUv;
+
+    void main()
+    {
+        vertexUv = uv;
+
+        gl_Position = uViewProjection * vec4(position, 1.0);
+    }
+    """;
+
+const string HudFragmentShaderSource = """
+    #version 330 core
+
+    in vec2 vertexUv;
+
+    out vec4 fragmentColor;
+
+    uniform sampler2D uTexture;
+
+    void main()
+    {
+        vec4 texel = texture(uTexture, vertexUv);
+
+        fragmentColor = vec4(texel.rgb, texel.a);
+    }
+    """;
+
+// Generated HUD font: a 5x7 pixel bitmap per glyph, packed into
+// padded 7x9 atlas cells so the linear texture filter never crosses
+// into a neighboring glyph. Cell 0 holds the translucent HUD bar
+// texel sampled by the bar quad; glyph cells start at index 1.
+// Characters outside the atlas fail loudly, matching the asset rules.
+
+const string HudCharset = "089ACEFIKMNORSTUWXY|";
+
+const int HudAtlasColumns = 8;
+
+const int HudCellWidth = 7;
+
+const int HudCellHeight = 9;
+
+static (char Name, string[] Rows)[] GetHudGlyphPatterns()
+{
+    return
+    [
+        ('0', [".###.", "#...#", "#..##", "#.#.#", "##..#", "#...#", ".###."]),
+        ('8', [".###.", "#...#", "#...#", ".###.", "#...#", "#...#", ".###."]),
+        ('9', [".###.", "#...#", "#...#", ".####", "....#", "#...#", ".###."]),
+        ('A', [".###.", "#...#", "#...#", "#####", "#...#", "#...#", "#...#"]),
+        ('C', [".####", "#....", "#....", "#....", "#....", "#....", ".####"]),
+        ('E', ["#####", "#....", "#....", "####.", "#....", "#....", "#####"]),
+        ('F', ["#####", "#....", "#....", "####.", "#....", "#....", "#...."]),
+        ('I', ["#####", "..#..", "..#..", "..#..", "..#..", "..#..", "#####"]),
+        ('K', ["#...#", "#..#.", "#.#..", "##...", "#.#..", "#..#.", "#...#"]),
+        ('M', ["#...#", "##.##", "#.#.#", "#.#.#", "#...#", "#...#", "#...#"]),
+        ('N', ["#...#", "##..#", "##..#", "#.#.#", "#..##", "#..##", "#...#"]),
+        ('O', [".###.", "#...#", "#...#", "#...#", "#...#", "#...#", ".###."]),
+        ('R', ["####.", "#...#", "#...#", "####.", "#.#..", "#..#.", "#...#"]),
+        ('S', [".####", "#....", "#....", ".###.", "....#", "....#", "####."]),
+        ('T', ["#####", "..#..", "..#..", "..#..", "..#..", "..#..", "..#.."]),
+        ('U', ["#...#", "#...#", "#...#", "#...#", "#...#", "#...#", ".###."]),
+        ('W', ["#...#", "#...#", "#...#", "#.#.#", "#.#.#", "##.##", "#...#"]),
+        ('X', ["#...#", "#...#", ".#.#.", "..#..", ".#.#.", "#...#", "#...#"]),
+        ('Y', ["#...#", "#...#", ".#.#.", "..#..", "..#..", "..#..", "..#.."]),
+        ('|', ["..#..", "..#..", "..#..", "..#..", "..#..", "..#..", "..#.."]),
+    ];
+}
+
+// Builds the RGBA atlas pixels at the fixed grid size; the bar texel
+// (a translucent dark blue) occupies cell 0 and glyph pixels are pure
+// white over a fully transparent background.
+
+byte[] BuildHudAtlasPixels(
+    IReadOnlyDictionary<char, int> cellsByCharacter,
+    out int atlasWidth,
+    out int atlasHeight)
+{
+    atlasWidth = HudAtlasColumns * HudCellWidth;
+
+    atlasHeight = HudAtlasRows() * HudCellHeight;
+
+    var pixels = new byte[atlasWidth * atlasHeight * 4];
+
+    var patterns = GetHudGlyphPatterns();
+
+    // Bar texel: centered in cell 0 so quads sample a single texel.
+
+    SetHudTexel(
+        pixels,
+        atlasWidth,
+        HudCellWidth / 2,
+        HudCellHeight / 2,
+        24,
+        34,
+        64,
+        175);
+
+    for (var i = 0; i < patterns.Length; ++i)
+    {
+        var glyphCell = cellsByCharacter[patterns[i].Name];
+
+        var cellX = (glyphCell % HudAtlasColumns) * HudCellWidth;
+        var cellY = glyphCell / HudAtlasColumns * HudCellHeight;
+
+        for (var row = 0; row < patterns[i].Rows.Length; ++row)
+        {
+            for (var column = 0; column < patterns[i].Rows[row].Length; ++column)
+            {
+                if (patterns[i].Rows[row][column] == '#')
+                {
+                    SetHudTexel(
+                        pixels,
+                        atlasWidth,
+                        cellX + 1 + column,
+                        cellY + 1 + row,
+                        byte.MaxValue,
+                        byte.MaxValue,
+                        byte.MaxValue,
+                        byte.MaxValue);
+                }
+            }
+        }
+    }
+
+    return pixels;
+}
+
+void SetHudTexel(
+    byte[] pixels,
+    int atlasWidth,
+    int x,
+    int y,
+    byte red,
+    byte green,
+    byte blue,
+    byte alpha)
+{
+    var offset = (y * atlasWidth + x) * 4;
+
+    pixels[offset + 0] = red;
+    pixels[offset + 1] = green;
+    pixels[offset + 2] = blue;
+    pixels[offset + 3] = alpha;
+}
+
+// Bakes the HUD help line into a clip-space quad per glyph on the
+// fixed interleaved vertex layout. Positions resolve against the
+// 1280x720 backbuffer: x maps to [-1, 1] left to right and y to
+// [1, -1] top to bottom. Unknown characters fail loudly.
+
+const string HudHelpText = "8 TEXTURES | 9 WIREFRAME | 0 CONTAINERS | S SKY | C CAMERA";
+
+const float HudTextPixelX = 12.0f;
+
+const float HudTextPixelY = 692.0f;
+
+const float HudGlyphPixelScale = 2.0f;
+
+float HudClipX(float pixelX)
+{
+    return pixelX / 640.0f - 1.0f;
+}
+
+float HudClipY(float pixelY)
+{
+    return 1.0f - pixelY / 360.0f;
+}
+
+float[] BuildHudTextVertices(
+    string text,
+    IReadOnlyDictionary<char, int> cellsByCharacter)
+{
+    const int stride = Mesh.ComponentsPerVertex;
+
+    var glyphCount = 0;
+
+    foreach (var character in text)
+    {
+        if (character != ' '
+            && !cellsByCharacter.ContainsKey(character))
+        {
+            throw new ArgumentException(
+                $"Character '{character}' has no glyph in the HUD font atlas.");
+        }
+
+        if (character != ' ')
+        {
+            ++glyphCount;
+        }
+    }
+
+    var vertices = new float[glyphCount * 6 * stride];
+
+    var write = 0;
+
+    var penX = HudTextPixelX;
+
+    var glyphPixelAdvance = 6.0f * HudGlyphPixelScale;
+
+    for (var i = 0; i < text.Length; ++i)
+    {
+        if (text[i] == ' ')
+        {
+            penX += glyphPixelAdvance;
+
+            continue;
+        }
+
+        var cell = cellsByCharacter[text[i]];
+
+        var column = cell % HudAtlasColumns;
+        var row = cell / HudAtlasColumns;
+
+        // Sample texel-center to texel-center: the glyph pattern rows
+        // run one texel inside the padded cell, so the outermost glyph
+        // texels must not half-blend with the transparent padding.
+
+        var u0 = (column * HudCellWidth + 1.5f) / (HudAtlasColumns * HudCellWidth);
+        var u1 = (column * HudCellWidth + 5.5f)
+            / (HudAtlasColumns * HudCellWidth);
+        var v0 = (row * HudCellHeight + 1.5f)
+            / (HudAtlasRows() * HudCellHeight);
+        var v1 = (row * HudCellHeight + 7.5f)
+            / (HudAtlasRows() * HudCellHeight);
+
+        var x0 = HudClipX(penX);
+        var x1 = HudClipX(penX + 5.0f * HudGlyphPixelScale);
+
+        var y0 = HudClipY(HudTextPixelY);
+        var y1 = HudClipY(HudTextPixelY + 7.0f * HudGlyphPixelScale);
+
+        // Two triangles covering the glyph quad, corners ordered
+        // counter-clockwise, each vertex position, color, normal, uv.
+
+        float[,] corners =
+        {
+            { x0, y0 },
+            { x1, y0 },
+            { x1, y1 },
+            { x0, y1 },
+        };
+
+        float[,] cornerUvs =
+        {
+            { u0, v0 },
+            { u1, v0 },
+            { u1, v1 },
+            { u0, v1 },
+        };
+
+        int[] quadIndices = { 0, 1, 2, 0, 2, 3 };
+
+        foreach (var corner in quadIndices)
+        {
+            vertices[write + 0] = corners[corner, 0];
+            vertices[write + 1] = corners[corner, 1];
+            vertices[write + 2] = 0.0f;
+            vertices[write + 3] = 1.0f;
+            vertices[write + 4] = 1.0f;
+            vertices[write + 5] = 1.0f;
+            vertices[write + 6] = 0.0f;
+            vertices[write + 7] = 0.0f;
+            vertices[write + 8] = 1.0f;
+            vertices[write + 9] = cornerUvs[corner, 0];
+            vertices[write + 10] = cornerUvs[corner, 1];
+
+            write += stride;
+        }
+
+        penX += glyphPixelAdvance;
+    }
+
+    if (write != vertices.Length)
+    {
+        throw new InvalidOperationException(
+            "HUD glyph mesh build covered unexpected vertex data.");
+    }
+
+    return vertices;
+}
+
+// Bakes the translucent HUD bar quad that sits behind the help text.
+
+float[] BuildHudBarVertices(
+    string text)
+{
+    const int stride = Mesh.ComponentsPerVertex;
+
+    var barPixelX = HudTextPixelX - 4.0f;
+    var barPixelWidth = text.Length * 6.0f * HudGlyphPixelScale + 2.0f;
+    var barPixelY = HudTextPixelY - 3.0f;
+    var barPixelHeight = 7.0f * HudGlyphPixelScale + 4.0f;
+
+    // The bar quad samples the dedicated bar texel in cell 0.
+
+    var u = HudBarCellU();
+    var v = HudBarCellV();
+
+    var x0 = HudClipX(barPixelX);
+    var x1 = HudClipX(barPixelX + barPixelWidth);
+
+    var y0 = HudClipY(barPixelY);
+    var y1 = HudClipY(barPixelY + barPixelHeight);
+
+    var vertices = new float[6 * stride];
+
+    float[,] corners =
+    {
+        { x0, y0 },
+        { x1, y0 },
+        { x1, y1 },
+        { x0, y1 },
+    };
+
+    int[] quadIndices = { 0, 1, 2, 0, 2, 3 };
+
+    var write = 0;
+
+    foreach (var corner in quadIndices)
+    {
+        vertices[write + 0] = corners[corner, 0];
+        vertices[write + 1] = corners[corner, 1];
+        vertices[write + 2] = 0.0f;
+        vertices[write + 3] = 1.0f;
+        vertices[write + 4] = 1.0f;
+        vertices[write + 5] = 1.0f;
+        vertices[write + 6] = 0.0f;
+        vertices[write + 7] = 0.0f;
+        vertices[write + 8] = 1.0f;
+        vertices[write + 9] = u;
+        vertices[write + 10] = v;
+
+        write += stride;
+    }
+
+    return vertices;
+}
+
+float HudBarCellU()
+{
+    return (HudCellWidth / 2.0f) / (HudAtlasColumns * HudCellWidth);
+}
+
+float HudBarCellV()
+{
+    return (HudCellHeight / 2.0f) / (HudAtlasRows() * HudCellHeight);
+}
+
+// Total atlas rows: one cell for the bar texel plus one cell per glyph
+// character, packed HudAtlasColumns per row.
+
+int HudAtlasRows()
+{
+    return (HudCharset.Length + 1 + HudAtlasColumns - 1) / HudAtlasColumns;
+}
+
 // The sky box draws through its own program: the vertex position is
 // the local view direction, sampled by the cube map.
 
@@ -486,6 +857,14 @@ IShaderProgram? containerShaderProgram = null;
 
 ITexture2D? modelsTextureOff = null;
 
+IShaderProgram? hudShaderProgram = null;
+
+ITexture2D? hudAtlasTexture = null;
+
+IVertexBuffer? hudBarBuffer = null;
+
+IVertexBuffer? hudTextBuffer = null;
+
 SilkAudioDevice? audioDevice = null;
 
 Listener? listener = null;
@@ -542,6 +921,40 @@ window.Run((currentWindow, deltaTime) =>
         // over every model when textures are hidden.
 
         modelsTextureOff = renderer.CreateTexture(1, 1, [byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue]);
+
+        // HUD: atlas texture plus the help line quads. The glyph cells
+        // map in HudCharset order after the reserved cell 0 (bar).
+
+        var hudCellsByCharacter = new Dictionary<char, int>();
+
+        for (var i = 0; i < HudCharset.Length; ++i)
+        {
+            hudCellsByCharacter.Add(HudCharset[i], i + 1);
+        }
+
+        var hudAtlasPixels = BuildHudAtlasPixels(
+            hudCellsByCharacter,
+            out var hudAtlasWidth,
+            out var hudAtlasHeight);
+
+        hudAtlasTexture = renderer.CreateTexture(
+            hudAtlasWidth,
+            hudAtlasHeight,
+            hudAtlasPixels);
+
+        hudShaderProgram = renderer.CreateShaderProgram(
+            HudVertexShaderSource,
+            HudFragmentShaderSource);
+
+        hudBarBuffer = renderer.CreateVertexBuffer(
+            new Mesh("hud bar", BuildHudBarVertices(HudHelpText)));
+
+        hudTextBuffer = renderer.CreateVertexBuffer(
+            new Mesh(
+                "hud text",
+                BuildHudTextVertices(
+                    HudHelpText,
+                    hudCellsByCharacter)));
 
         renderer.SetViewport(1280, 720);
 
@@ -1007,6 +1420,39 @@ window.Run((currentWindow, deltaTime) =>
                 "uModel",
                 container.Transform.WorldMatrix);
         }
+    }
+
+    // HUD: on-screen key options, drawn last in two-dimensional clip
+    // space. Depth testing is suspended so the overlay covers the
+    // scene, triangles stay filled, and alpha blending mixes the
+    // translucent bar and glyph pixels; all state restores after.
+
+    renderer.SetWireframe(false);
+    renderer.SetDepthTest(false);
+    renderer.SetBlending(true);
+
+    renderer.DrawTriangles(
+        hudBarBuffer!,
+        hudShaderProgram!,
+        "uViewProjection",
+        Matrix4x4.Identity,
+        hudAtlasTexture!,
+        "uTexture");
+
+    renderer.DrawTriangles(
+        hudTextBuffer!,
+        hudShaderProgram!,
+        "uViewProjection",
+        Matrix4x4.Identity,
+        hudAtlasTexture!,
+        "uTexture");
+
+    renderer.SetBlending(false);
+    renderer.SetDepthTest(true);
+
+    if (wireframeTriangles)
+    {
+        renderer.SetWireframe(true);
     }
 
     // Debug toggle keys: 8 texture visibility, 9 wireframe triangles,

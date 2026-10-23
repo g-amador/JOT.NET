@@ -135,6 +135,33 @@ public interface IGraphicsContext
         IVertexBuffer vertexBuffer);
 
     /// <summary>
+    /// Sets whether triangle geometry renders blended over the existing
+    /// framebuffer pixels: enabled mixes incoming fragments with the
+    /// framebuffer by their alpha for translucent overlays such as
+    /// on-screen text; disabled writes every fragment fully opaque.
+    /// Applies to subsequent draws until toggled again.
+    /// </summary>
+    /// <param name="enabled">
+    /// Whether alpha blending runs (true) or pixels overwrite (false).
+    /// </param>
+    void SetBlending(
+        bool enabled);
+
+    /// <summary>
+    /// Sets whether fragment depth testing runs: enabled draws accept
+    /// only fragments in front of stored depth; disabled draws overlay
+    /// everything, used by two-dimensional interfaces like the HUD.
+    /// Applies to subsequent draws until toggled again. Reactivating
+    /// the depth test restores the standard less-than comparison.
+    /// </summary>
+    /// <param name="enabled">
+    /// Whether depth testing runs (true) or fragments bypass it
+    /// (false).
+    /// </param>
+    void SetDepthTest(
+        bool enabled);
+
+    /// <summary>
     /// Toggles wireframe rendering of triangle geometry: enabled draws
     /// only the triangle edges as lines, disabled renders filled
     /// triangles. Applies to subsequent triangle draws until toggled.
