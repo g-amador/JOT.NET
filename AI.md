@@ -387,6 +387,26 @@ before the next; engine additions ride along in Core/Infrastructure):
       (unit UV sphere, radius 1, generated placeholder; v/vt/vn
       shared smooth normals), placed in the scene at ground height
       (bounds load-verified: exact -1..+1, 1024 triangles).
+- [x] Step 7d - RayDemo (src/demos/examples/RayDemo): CPU Monte Carlo
+      path tracer in smallpt style (99-line smallpt by Kevin Beason
+      honored): a glass sphere, a mirror cube and a diffuse cone
+      inside a small closed Cornell-room (tinted side walls), lit by
+      an emissive sphere lamp. BRDF set: ideal diffuse with
+      cosine-weighted hemisphere importance sampling, ideal specular
+      reflection and ideal dielectric glass with Schlick-Fresnel
+      reflect/refract splitting; Russian roulette path depth;
+      per-pixel jitter; gamma 2.2 tonemap. Soft shadows and diffuse
+      color bleeding emerge from sampling. Core reuse: JOT.Core.Math
+      Ray primitive and the Core.Math RayIntersections wall-plane
+      intersections; the sphere/box/capped-cone closest-hit queries
+      and BRDF machinery stand in the demo because the Core.Math
+      intersection helpers expose boolean tests only. Outputs a BMP
+      (raydemo.bmp; flags --width/--height/--samples/--output,
+      defaults 480x320 at 64 samples). Verified: render completes,
+      glass refraction (blue wall seen through the sphere), tint
+      bleeding on the walls, mirror and diffuse objects correct; the
+      remaining speckle is the smallpt-style path noise converging
+      with sample count.
 - [ ] Step 8 - Core Template closure (checklist confirmation)
 
 # CURRENT STATUS
