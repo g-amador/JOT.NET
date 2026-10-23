@@ -13,7 +13,6 @@
   </Folder>
   <Folder Name="/Demos/">
     <Project Path="demos/examples/AudioDemo/AudioDemo.csproj" />
-    <Project Path="demos/smoke/CoreRenderingSmoke/CoreRenderingSmoke.csproj" />
   </Folder>
   <Folder Name="/Framework/">
     <Project Path="engine/framework/JOT.Framework.Application/JOT.Framework.Application.csproj" Id="66b60214-a275-4474-aa87-cd4a7444d06d" />
