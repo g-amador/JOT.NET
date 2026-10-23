@@ -9,8 +9,23 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\engine\core\JOT.Core.Rendering\JOT.Core.Rendering.csproj" />
+    <ProjectReference Include="..\..\..\engine\core\JOT.Core.Audio\JOT.Core.Audio.csproj" />
     <ProjectReference Include="..\..\..\engine\infrastructure\JOT.Infrastructure.Silk\JOT.Infrastructure.Silk.csproj" />
     <ProjectReference Include="..\..\..\engine\infrastructure\JOT.Infrastructure.Assimp\JOT.Infrastructure.Assimp.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OpenAL.Soft" PrivateAssets="all" />
+  </ItemGroup>
+
+  <Target Name="CopyOpenALNative" AfterTargets="Build">
+    <!-- OpenAL.Soft stages natives into runtimes/ but does not register them
+         for .NET native resolution. The template copies the x64 dll next
+         to the executable. -->
+    <Copy SourceFiles="$(OutDir)runtimes\win-x64\native\Release\OpenAL32.dll"
+          DestinationFolder="$(OutDir)"
+          SkipUnchangedFiles="true"
+          Condition="Exists('$(OutDir)runtimes\win-x64\native\Release\OpenAL32.dll')" />
+  </Target>
 
 </Project>

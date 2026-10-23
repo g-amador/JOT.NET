@@ -1,11 +1,10 @@
 ﻿// The JOT.NET Core Template validation program (AI.md success criteria);
-// currently at Step 5: debug toggles — key 8 toggles texture
-// visibility (models render white without textures), key 9 toggles
-// wireframe triangle rendering, and key 0 toggles white wireframe
-// bounding containers around every model, built through the JOT.Core.Math
-// AABB math.
+// currently at Step 6: 3D sound — a looping OpenAL emitter at the cone,
+// with the listener following the camera each frame through the
+// JOT.Core.Audio positional audio stack.
 
 using System.Numerics;
+using JOT.Core.Audio;
 using JOT.Core.Math.Geometry;
 using JOT.Core.Math.Transformations;
 using JOT.Core.Rendering.Cameras;
@@ -14,6 +13,7 @@ using JOT.Core.Rendering.Meshes;
 using JOT.Core.Rendering.Renderers;
 using JOT.Core.Rendering.Sky;
 using JOT.Infrastructure.Assimp.Importing;
+using JOT.Infrastructure.Silk.Audio;
 using JOT.Infrastructure.Silk.Graphics;
 using JOT.Infrastructure.Silk.Input;
 using JOT.Infrastructure.Silk.Windowing;
@@ -401,7 +401,7 @@ camera.Transform.Rotation = Quaternion.CreateFromAxisAngle(
     Vector3.UnitX,
     -0.35f);
 
-var viewProjection = camera.ViewMatrix * camera.ProjectionMatrix;
+    var viewProjection = camera.ViewMatrix * camera.ProjectionMatrix;
 
 // Sun-like directional light over the scene. The shadow volume covers
 // the whole ground plane and every model instance.
@@ -452,6 +452,12 @@ IShadowRenderTarget? shadowRenderTarget = null;
 IShaderProgram? containerShaderProgram = null;
 
 ITexture2D? modelsTextureOff = null;
+
+SilkAudioDevice? audioDevice = null;
+
+Listener? listener = null;
+
+SoundEmitter? coneSound = null;
 
 ITextureCubeMap? skyBoxTexture = null;
 
@@ -727,6 +733,38 @@ window.Run((currentWindow, deltaTime) =>
         skyBoxBuffer = renderer.CreateVertexBuffer(skyBox.Geometry);
 
         Console.WriteLine($"Loaded sky box 'desert' (6 faces at {faceWidth}x{faceHeight}).");
+
+        // Step 6: positional audio. The emitter loops the explosion boom
+        // right at the cone; the listener follows the camera transform
+        // each frame after the per-frame draw. The file must be
+        // uncompressed 16-bit MONO PCM: OpenAL only spatializes mono
+        // buffers (stereo sources ignore position).
+
+        audioDevice = new SilkAudioDevice();
+
+        listener = new Listener(audioDevice);
+
+        var emitterWave = WaveFile.Load(
+            Path.Combine(
+                assetsDirectory,
+                "sounds",
+                "Effects",
+                "explosion6.wav"));
+
+        coneSound = new SoundEmitter(
+            audioDevice,
+            emitterWave.Samples,
+            emitterWave.SampleRate,
+            emitterWave.Channels)
+        {
+            Position = new Vector3(4.5f, 0.5f, -3.0f),
+            Looping = true,
+        };
+
+        coneSound.Play();
+
+        Console.WriteLine(
+            $"Audio emitter looping 'explosion6.wav' ({emitterWave.Seconds:F1}s at {emitterWave.SampleRate} Hz, {emitterWave.Channels} ch) at the cone.");
     }
 
     // Cycle the sky mode on the S key.
@@ -744,6 +782,14 @@ window.Run((currentWindow, deltaTime) =>
     }
 
     renderer!.Clear(0.1f, 0.15f, 0.35f, 1.0f);
+
+    // The audio listener follows the camera: position and orientation
+    // push into OpenAL every frame so the emitter mixes relative to
+    // the view.
+
+    listener!.Transform.Position = camera.Transform.Position;
+    listener.Transform.Rotation = camera.Transform.Rotation;
+    listener.Synchronize();
 
     // Shadow pass: depth of the ground and the models from the light.
 
@@ -865,11 +911,18 @@ window.Run((currentWindow, deltaTime) =>
     if (currentWindow.Input.Keyboard.IsKeyPressed(KeyCode.Escape)
         || (frameLimit is int limit && ++frameCount >= limit))
     {
+        Console.WriteLine($"Emitter still playing at close: {coneSound!.IsPlaying}.");
+
         currentWindow.Close();
 
         Console.WriteLine($"Template closed normally after {frameCount} frames.");
     }
 });
+
+// The OpenAL device owns a native context; release it before process
+// exit instead of leaving it to the destructors.
+
+audioDevice?.Dispose();
 
 
 // Identifies one textured, positioned entry of the scene composition.
