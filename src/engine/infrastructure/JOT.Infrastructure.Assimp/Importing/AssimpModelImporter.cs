@@ -1,4 +1,6 @@
 using Assimp;
+using AssimpMatrix = Assimp.Matrix4x4;
+using StbImageSharp;
 using System.Numerics;
 
 namespace JOT.Infrastructure.Assimp.Importing;
@@ -58,6 +60,17 @@ public sealed class AssimpModelImporter : IModelImporter
                 $"Failed to import model file: '{filePath}'.");
         }
 
+        // Bake the transform chain of every node into its referenced
+        // mesh: models with hierarchy offsets (glTF binary usually) then
+        // import in their final world-space shape.
+
+        var meshTransforms = new System.Numerics.Matrix4x4[scene.MeshCount];
+
+        CollectNodeTransforms(
+            scene.RootNode,
+            System.Numerics.Matrix4x4.Identity,
+            meshTransforms);
+
         var materials = new List<ImportedMaterial>(scene.MaterialCount);
 
         foreach (var material in scene.Materials)
@@ -72,14 +85,15 @@ public sealed class AssimpModelImporter : IModelImporter
                 DiffuseTexturePath = material.HasTextureDiffuse
                     ? material.TextureDiffuse.FilePath
                     : null,
+                DiffuseEmbeddedTexture = LoadEmbeddedDiffuse(scene, material),
             });
         }
 
         var meshes = new List<ImportedMesh>(scene.MeshCount);
 
-        foreach (var mesh in scene.Meshes)
+        for (var i = 0; i < scene.MeshCount; ++i)
         {
-            meshes.Add(ImportMesh(mesh));
+            meshes.Add(ImportMesh(scene.Meshes[i], meshTransforms[i]));
         }
 
         return new ImportedModel
@@ -90,8 +104,118 @@ public sealed class AssimpModelImporter : IModelImporter
         };
     }
 
+    private static void CollectNodeTransforms(
+        Node node,
+        System.Numerics.Matrix4x4 parent,
+        System.Numerics.Matrix4x4[] meshTransforms)
+    {
+        // Assimp composes node chains as parent * child with row-vectors;
+        // converting each matrix on the System.Numerics column-vector
+        // convention reproduces the same world shapes.
+
+        var current = parent * ToNumerics(node.Transform);
+
+        foreach (var meshIndex in node.MeshIndices)
+        {
+            if (meshIndex >= 0 && meshIndex < meshTransforms.Length)
+            {
+                meshTransforms[meshIndex] = current;
+            }
+        }
+
+        foreach (var child in node.Children)
+        {
+            CollectNodeTransforms(child, current, meshTransforms);
+        }
+    }
+
+    private static System.Numerics.Matrix4x4 ToNumerics(
+        AssimpMatrix matrix)
+    {
+        // Assimp matrices are stored for row-vector math with the
+        // translation in the last column (a4, b4, c4); System.Numerics
+        // multiplies column vectors, so the linear map is the transpose
+        // and the translation row lands in the System translation
+        // positions (M41..M43).
+
+        return new System.Numerics.Matrix4x4(
+            matrix.A1, matrix.B1, matrix.C1, matrix.D1,
+            matrix.A2, matrix.B2, matrix.C2, matrix.D2,
+            matrix.A3, matrix.B3, matrix.C3, matrix.D3,
+            matrix.A4, matrix.B4, matrix.C4, matrix.D4);
+    }
+
+    private static RawImage? LoadEmbeddedDiffuse(
+        Scene scene,
+        Material material)
+    {
+        if (!material.HasTextureDiffuse
+            || material.TextureDiffuse.FilePath.Length < 2
+            || material.TextureDiffuse.FilePath[0] != '*')
+        {
+            return null;
+        }
+
+        if (!int.TryParse(
+                material.TextureDiffuse.FilePath[1..],
+                out var textureIndex)
+            || textureIndex < 0
+            || textureIndex >= scene.TextureCount)
+        {
+            return null;
+        }
+
+        var embedded = scene.Textures[textureIndex];
+
+        if (embedded.IsCompressed)
+        {
+            // The embed holds a compressed PNG/JPEG byte stream; decode
+            // it the same way files on disk are decoded.
+
+            var decoded = ImageResult.FromMemory(
+                embedded.CompressedData,
+                ColorComponents.RedGreenBlueAlpha);
+
+            return new RawImage
+            {
+                SourcePath = $"*{textureIndex}",
+                Width = decoded.Width,
+                Height = decoded.Height,
+                Pixels = decoded.Data,
+            };
+        }
+
+        // The embed holds Width x Height uncompressed ARGB8888 texels;
+        // convert into the RGBA contract of RawImage.
+
+        var texelCount = embedded.NonCompressedData.Length;
+
+        var pixels = new byte[texelCount * 4];
+
+        for (var i = 0; i < texelCount; ++i)
+        {
+            var texel = embedded.NonCompressedData[i];
+
+            var offset = i * 4;
+
+            pixels[offset + 0] = texel.R;
+            pixels[offset + 1] = texel.G;
+            pixels[offset + 2] = texel.B;
+            pixels[offset + 3] = texel.A;
+        }
+
+        return new RawImage
+        {
+            SourcePath = $"*{textureIndex}",
+            Width = embedded.Width,
+            Height = embedded.Height,
+            Pixels = pixels,
+        };
+    }
+
     private static ImportedMesh ImportMesh(
-        Mesh mesh)
+        Mesh mesh,
+        System.Numerics.Matrix4x4 world)
     {
         var vertexCount = mesh.VertexCount;
 
@@ -99,11 +223,16 @@ public sealed class AssimpModelImporter : IModelImporter
 
         for (var i = 0; i < vertexCount; ++i)
         {
-            var vertex = mesh.Vertices[i];
+            var worldVertex = System.Numerics.Vector3.Transform(
+                new System.Numerics.Vector3(
+                    mesh.Vertices[i].X,
+                    mesh.Vertices[i].Y,
+                    mesh.Vertices[i].Z),
+                world);
 
-            positions[i * 3 + 0] = vertex.X;
-            positions[i * 3 + 1] = vertex.Y;
-            positions[i * 3 + 2] = vertex.Z;
+            positions[i * 3 + 0] = worldVertex.X;
+            positions[i * 3 + 1] = worldVertex.Y;
+            positions[i * 3 + 2] = worldVertex.Z;
         }
 
         var normals = new float[vertexCount * 3];
@@ -112,11 +241,20 @@ public sealed class AssimpModelImporter : IModelImporter
         {
             for (var i = 0; i < vertexCount; ++i)
             {
-                var normal = mesh.Normals[i];
+                // The linear map only (rotation and scale); renormalize
+                // so scaled hierarchies keep unit-length normals.
 
-                normals[i * 3 + 0] = normal.X;
-                normals[i * 3 + 1] = normal.Y;
-                normals[i * 3 + 2] = normal.Z;
+                var worldNormal = System.Numerics.Vector3.Normalize(
+                    System.Numerics.Vector3.TransformNormal(
+                        new System.Numerics.Vector3(
+                            mesh.Normals[i].X,
+                            mesh.Normals[i].Y,
+                            mesh.Normals[i].Z),
+                        world));
+
+                normals[i * 3 + 0] = worldNormal.X;
+                normals[i * 3 + 1] = worldNormal.Y;
+                normals[i * 3 + 2] = worldNormal.Z;
             }
         }
 

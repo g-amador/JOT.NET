@@ -364,7 +364,23 @@ before the next; engine additions ride along in Core/Infrastructure):
       top-down cameras; view-projection, sky container matrices and
       audio listener rebuild from the active camera every frame
       (both new views capture-verified)
-- [ ] Step 7 - Multiple camera views
+- [x] Step 7b - glTF scene set: cow.obj and fighter.obj in the scene
+      replaced by ALL six models in assets/models/glTF (cow.glb,
+      Duck.glb, Duke.glb, p-40_warhawk.glb, star_wars_tie_fighter.glb,
+      x_wing.glb); importer upgrades: node-transform baking into mesh
+      vertices/normals (Assimp row-vector matrices converted to the
+      System.Numerics column-vector convention) and embedded diffuse
+      texture extraction from glTF binary (compressed decodes through
+      Stb, uncompressed ARGB texels convert to RGBA;
+      ImportedMaterial.DiffuseEmbeddedTexture), with materials-directory
+      textures as the per-mesh fallback. AssimpNet pinned to
+      5.0.0-beta1: 4.1.0 silently imports the modern Blender glTF 2.0
+      export of Duke.glb as zero meshes; 5.0.0-beta1 imports all six
+      models with correct bounds. Per-model load log prints mesh and
+      triangle counts plus local bounds. Orbit camera pulled back to
+      frame the larger set. Capture-verified: duck/warhawk/TIE/x-wing
+      render with their real embedded textures, cow/Duke (no embedded
+      diffuse in the files) render with the fallback materials texture.
 - [ ] Step 8 - Core Template closure (checklist confirmation)
 
 # CURRENT STATUS
@@ -502,7 +518,8 @@ Success criteria:
 3. 3D sound.
 4. Multiple camera views.
 5. Light effects (e.g., directional shadows on the ground).
-6. Model loading cow, brick cube, fighter, cone from assets/models.
+6. Model loading: the six glTF models from assets/models/glTF, plus
+   brick cube and cone from assets/models/obj (see the asset table).
 7. Sky box AND sky dome: both loadable; select sky mode Off, Dome, or
    Box; each container is textured from one sky texture set in
    assets/textures.
@@ -512,21 +529,33 @@ Success criteria:
 
 Nothing more.
 
-Asset placeholder names (models land in assets/models/obj, textures
-in assets/textures; real files arrive later and the template resolves
-them by path, failing loudly with a clear message when missing
-— verified against a FileNotFoundException pointing at the missing
-model path):
+Asset placeholder names (scene models land under assets/models with
+glTF/ and obj/ subfolders, textures in assets/textures; real files
+arrive later and the template resolves them by path, failing loudly
+with a clear message when missing — verified against a
+FileNotFoundException pointing at the missing model path):
 
 | File                              | Placeholder   | Used for                     |
 |-----------------------------------|---------------|------------------------------|
-| assets/models/obj/cow.obj         | cow           | grazed model with a bell     |
+| assets/models/glTF/cow.glb        | cow           | grazed model (scene)         |
+| assets/models/glTF/Duck.glb       | rubber duck   | textured scene model         |
+| assets/models/glTF/Duke.glb       | character     | figure scene model           |
+| assets/models/glTF/p-40_warhawk.glb | warplane    | flying scene model           |
+| assets/models/glTF/star_wars_tie_fighter.glb | spacecraft | flying scene model   |
+| assets/models/glTF/x_wing.glb     | spacecraft    | flying scene model           |
 | assets/models/obj/brick_cube.obj  | brick cube    | textured cubes               |
-| assets/models/obj/fighter.obj     | fighter       | spacecraft model             |
 | assets/models/obj/cone.obj        | mountain cone | cone next to a test emitter  |
-| assets/textures/materials/*       | materials     | per-model material textures  |
+| assets/textures/materials/*       | materials     | per-model fallback textures (meshes without an embedded texture) |
 | assets/textures/skybox/desert     | desert sky    | the active sky box container |
 | assets/textures/skydome/*.jpg     | panorama sky  | the active sky dome container|
+
+The former cow.obj and fighter.obj placeholders are superseded by the
+glTF set (the files remain in assets/models/obj as loadable assets).
+
+Embedded textures: glTF binary files carry their diffuse textures
+inside; the importer extracts them and the template renders these
+models with their own pixels, falling back to the materials directory
+only for meshes whose material defines no embedded texture.
 
 Other model packs under assets/models (kenney space-kit, kenney
 watercraft-pack, building) are unorganized library content; the

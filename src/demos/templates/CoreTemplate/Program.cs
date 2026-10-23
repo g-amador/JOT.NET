@@ -417,12 +417,13 @@ PerspectiveCamera CreateCamera(
     return camera;
 }
 
-// Orbit view over the scene (the original full view).
+// Orbit view over the scene (the original full view). Pulled back to
+// frame the glTF model set, which spans several ground units.
 
 _ = CreateCamera(
-    new Vector3(0.0f, 2.0f, 4.0f),
+    new Vector3(0.0f, 2.5f, 8.0f),
     0.0f,
-    -0.35f);
+    -0.28f);
 
 // Cow-side view: grass level looking across at the cow.
 
@@ -583,14 +584,12 @@ window.Run((currentWindow, deltaTime) =>
                         "greengrass-lambertian.png")),
                 new Transform()));
 
-        // Model instances: assets under assets/models/obj; the
-        // material textures come from assets/textures/materials. Every
-        // model file fails loudly when missing or of a wrong format.
+        // Model instances: assets under assets/models (instance entries
+        // carry their glTF/obj subfolder prefix); the material
+        // textures come from assets/textures/materials. Every model
+        // file fails loudly when missing or of a wrong format.
 
-        var modelsDirectory = Path.Combine(
-            assetsDirectory,
-            "models",
-            "obj");
+        var modelsDirectory = Path.Combine(assetsDirectory, "models");
 
         var materialTexturesDirectory = Path.Combine(
             assetsDirectory,
@@ -616,28 +615,56 @@ window.Run((currentWindow, deltaTime) =>
 
             var totalTriangles = 0;
 
+            var boundsMin = new Vector3(float.MaxValue);
+            var boundsMax = new Vector3(float.MinValue);
+
             foreach (var mesh in model.Meshes)
             {
                 totalTriangles += mesh.Indices.Length / 3;
+
+                for (var v = 0; v < mesh.Positions.Length; v += 3)
+                {
+                    var position = new Vector3(
+                        mesh.Positions[v],
+                        mesh.Positions[v + 1],
+                        mesh.Positions[v + 2]);
+
+                    boundsMin = Vector3.Min(boundsMin, position);
+                    boundsMax = Vector3.Max(boundsMax, position);
+                }
             }
 
             Console.WriteLine(
-                $"Loaded model '{model.Name}': {model.Meshes.Count} mesh(es), {totalTriangles} triangles.");
+                $"Loaded model '{model.Name}': {model.Meshes.Count} mesh(es), "
+                + $"{totalTriangles} triangles, "
+                + $"bounds ({boundsMin.X:F1},{boundsMin.Y:F1},{boundsMin.Z:F1}).."
+                + $"({boundsMax.X:F1},{boundsMax.Y:F1},{boundsMax.Z:F1}).");
 
             return model;
         }
 
         var sceneInstances = new (string ModelFile, string TextureDirectory, string TextureFile, Transform Transform)[]
         {
-            ("cow.obj", "rockydirt", "rockydirt-lambertian.png",
-                CreateTransform(new Vector3(-3.0f, 0.0f, -1.0f), Vector3.One, -1.2f, 0.0f)),
-            ("brick_cube.obj", "redbrick", "redbrick-lambertian.png",
+            // Scales normalize each model's import bounds (logged at
+            // load) to comparable scene sizes.
+
+            ("glTF/cow.glb", "rockydirt", "rockydirt-lambertian.png",
+                CreateTransform(new Vector3(-3.0f, 0.0f, -1.0f), new Vector3(0.4f), -1.2f, 0.0f)),
+            ("glTF/Duck.glb", "stucco", "stucco-lambertian.png",
+                CreateTransform(new Vector3(-1.6f, 0.0f, 1.8f), new Vector3(0.8f), 0.5f, 0.0f)),
+            ("glTF/Duke.glb", "rustymetal", "rustymetal-lambertian.png",
+                CreateTransform(new Vector3(0.9f, 0.0f, 1.6f), new Vector3(1.0f), 2.2f, 0.0f)),
+            ("glTF/p-40_warhawk.glb", "metalcrate", "metalcrate-lambertian.png",
+                CreateTransform(new Vector3(0.0f, 2.4f, -3.5f), new Vector3(0.35f), -1.9f, 0.15f)),
+            ("glTF/star_wars_tie_fighter.glb", "rustymetal", "rustymetal-lambertian.png",
+                CreateTransform(new Vector3(-2.6f, 2.6f, -5.5f), new Vector3(0.4f), -0.6f, -0.1f)),
+            ("glTF/x_wing.glb", "metalcrate", "metalcrate-lambertian.png",
+                CreateTransform(new Vector3(3.5f, 2.2f, -5.0f), new Vector3(15.0f), 0.9f, 0.1f)),
+            ("obj/brick_cube.obj", "redbrick", "redbrick-lambertian.png",
                 CreateTransform(new Vector3(2.2f, 0.0f, 0.2f), Vector3.One, 0.0f, 0.0f)),
-            ("brick_cube.obj", "redbrick", "redbrick-lambertian.png",
+            ("obj/brick_cube.obj", "redbrick", "redbrick-lambertian.png",
                 CreateTransform(new Vector3(3.2f, 0.0f, -0.6f), Vector3.One, 0.7f, 0.0f)),
-            ("fighter.obj", "metalcrate", "metalcrate-lambertian.png",
-                CreateTransform(new Vector3(0.0f, 1.6f, -3.5f), Vector3.One, -1.9f, 0.15f)),
-            ("cone.obj", "stucco", "stucco-lambertian.png",
+            ("obj/cone.obj", "stucco", "stucco-lambertian.png",
                 CreateTransform(new Vector3(4.5f, 0.0f, -3.0f), new Vector3(2.2f, 2.8f, 2.2f), 0.0f, 0.0f)),
         };
 
@@ -650,6 +677,44 @@ window.Run((currentWindow, deltaTime) =>
                     materialTexturesDirectory,
                     instance.TextureDirectory,
                     instance.TextureFile));
+
+            // Per-mesh material textures: meshes whose material carries
+            // a texture embedded in the model file (glTF binary) use
+            // those pixels; the materials-directory file is the
+            // fallback for meshes without embedded textures.
+
+            var embeddedTextures = new Dictionary<int, ITexture2D>();
+            var usesEmbeddedTextures = false;
+
+            ITexture2D ResolveTexture(ImportedMesh mesh)
+            {
+                var embedded = model.Materials.Count > mesh.MaterialIndex
+                    ? model.Materials[mesh.MaterialIndex].DiffuseEmbeddedTexture
+                    : null;
+
+                if (embedded is null)
+                {
+                    return texture;
+                }
+
+                if (embeddedTextures.TryGetValue(
+                        mesh.MaterialIndex,
+                        out var existing))
+                {
+                    return existing;
+                }
+
+                var embeddedTexture = renderer.CreateTexture(
+                    embedded.Width,
+                    embedded.Height,
+                    embedded.Pixels);
+
+                embeddedTextures.Add(mesh.MaterialIndex, embeddedTexture);
+
+                usesEmbeddedTextures = true;
+
+                return embeddedTexture;
+            }
 
             // Walk instance triangles once for both the container
             // bounds and the debug containers list.
@@ -667,7 +732,7 @@ window.Run((currentWindow, deltaTime) =>
                             new Mesh(
                                 mesh.Name,
                                 baked)),
-                        texture,
+                        ResolveTexture(mesh),
                         instance.Transform));
 
                 for (var v = 0; v < baked.Length; v += Mesh.ComponentsPerVertex)
@@ -693,6 +758,12 @@ window.Run((currentWindow, deltaTime) =>
                                 instance.Transform.WorldMatrix))),
                     modelsTextureOff!,
                     new Transform()));
+
+            if (usesEmbeddedTextures)
+            {
+                Console.WriteLine(
+                    $"Used embedded textures from '{model.Name}'.");
+            }
         }
 
         // Sky dome: panoramic texture on the hemisphere geometry.
