@@ -512,20 +512,27 @@ Success criteria:
 
 Nothing more.
 
-Asset placeholder names (models land in assets/models, textures in
-assets/textures; real files arrive later and the template resolves
-them by path, failing loudly with a clear message when missing):
+Asset placeholder names (models land in assets/models/obj, textures
+in assets/textures; real files arrive later and the template resolves
+them by path, failing loudly with a clear message when missing
+— verified against a FileNotFoundException pointing at the missing
+model path):
 
 | File                              | Placeholder   | Used for                     |
 |-----------------------------------|---------------|------------------------------|
-| assets/models/cow.obj             | cow           | grazed model with a bell     |
-| assets/models/brick_cube.obj      | brick cube    | textured cubes               |
-| assets/models/fighter.obj         | fighter       | spacecraft model             |
-| assets/models/cone.obj            | mountain cone | cone next to a test emitter  |
-| assets/models/cow/cow.dae         | cow (mesh)    | real-textured cow variant    |
+| assets/models/obj/cow.obj         | cow           | grazed model with a bell     |
+| assets/models/obj/brick_cube.obj  | brick cube    | textured cubes               |
+| assets/models/obj/fighter.obj     | fighter       | spacecraft model             |
+| assets/models/obj/cone.obj        | mountain cone | cone next to a test emitter  |
 | assets/textures/materials/*       | materials     | per-model material textures  |
 | assets/textures/skybox/desert     | desert sky    | the active sky box container |
 | assets/textures/skydome/*.jpg     | panorama sky  | the active sky dome container|
+
+Other model packs under assets/models (kenney space-kit, kenney
+watercraft-pack, building) are unorganized library content; the
+template does not reference them. Note most kenney packs ship FBX/STL
+variants that the importer rejects by the OBJ+glTF 2 rule; their "OBJ
+format" and "GLB format" subfolders are loadable sources if ever used.
 
 Model and material placeholder names resolve by path and fail loudly
 with a clear message when missing; real files may replace the

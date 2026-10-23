@@ -583,11 +583,14 @@ window.Run((currentWindow, deltaTime) =>
                         "greengrass-lambertian.png")),
                 new Transform()));
 
-        // Model instances: placeholder assets under assets/models; the
+        // Model instances: assets under assets/models/obj; the
         // material textures come from assets/textures/materials. Every
         // model file fails loudly when missing or of a wrong format.
 
-        var modelsDirectory = Path.Combine(assetsDirectory, "models");
+        var modelsDirectory = Path.Combine(
+            assetsDirectory,
+            "models",
+            "obj");
 
         var materialTexturesDirectory = Path.Combine(
             assetsDirectory,
