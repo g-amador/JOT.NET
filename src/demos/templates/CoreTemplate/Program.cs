@@ -1,7 +1,8 @@
 ﻿// The JOT.NET Core Template validation program (AI.md success criteria);
-// currently at Step 6: 3D sound — a looping OpenAL emitter at the cone,
-// with the listener following the camera each frame through the
-// JOT.Core.Audio positional audio stack.
+// currently at Step 7: multiple camera views — the C key cycles the
+// orbit view, a grass-level cow-side view and a near-top-down view;
+// the view-projection, sky containers and audio listener all follow
+// the active camera.
 
 using System.Numerics;
 using JOT.Core.Audio;
@@ -388,20 +389,56 @@ var imageLoader = new StbImageLoader();
 
 var window = new SilkWindow("JOT.NET Core Template", 1280, 720);
 
-var camera = new PerspectiveCamera
+// Multiple camera views cycle on the C key: the orbit view over the
+// scene, a grass-level cow-side view and a near-top-down view. Each
+// aims through the Transform forward axis (identity looks down -Z;
+// yaw turns around Y, pitch up is positive), computed from the view
+// direction toward the looked-at point.
+
+var cameraViews = new[] { "orbit", "cow-side", "top-down" };
+
+var cameras = new List<PerspectiveCamera>();
+
+PerspectiveCamera CreateCamera(
+    Vector3 position,
+    float yaw,
+    float pitch)
 {
-    AspectRatio = 1280.0f / 720.0f,
-};
+    var camera = new PerspectiveCamera
+    {
+        AspectRatio = 1280.0f / 720.0f,
+    };
 
-camera.Transform.Position = new Vector3(0.0f, 2.0f, 4.0f);
+    camera.Transform.Position = position;
+    camera.Transform.Rotation = Quaternion.CreateFromYawPitchRoll(yaw, pitch, 0.0f);
 
-// Pitch the camera down toward the ground plane.
+    cameras.Add(camera);
 
-camera.Transform.Rotation = Quaternion.CreateFromAxisAngle(
-    Vector3.UnitX,
+    return camera;
+}
+
+// Orbit view over the scene (the original full view).
+
+_ = CreateCamera(
+    new Vector3(0.0f, 2.0f, 4.0f),
+    0.0f,
     -0.35f);
 
-    var viewProjection = camera.ViewMatrix * camera.ProjectionMatrix;
+// Cow-side view: grass level looking across at the cow.
+
+_ = CreateCamera(
+    new Vector3(-6.0f, 1.3f, 1.5f),
+    -0.876f,
+    -0.32f);
+
+// Near-top-down view over the whole ground plane.
+
+_ = CreateCamera(
+    new Vector3(0.0f, 14.0f, 0.0f),
+    0.0f,
+    -1.45f);
+
+var activeCameraIndex = 0;
 
 // Sun-like directional light over the scene. The shadow volume covers
 // the whole ground plane and every model instance.
@@ -419,13 +456,8 @@ var lightViewProjection = directionalLight.CreateShadowViewProjection(
     nearPlane: 1.0f,
     farPlane: 100.0f);
 
-// The sky containers center on the camera position: the sky box draws
-// through its single composite transform, the sky dome supplies the
-// same matrices separately through the lit scene program.
-
-var skyMatrix = Matrix4x4.CreateTranslation(camera.Transform.Position);
-
-var skyBoxComposite = skyMatrix * viewProjection;
+// The sky containers and the composite view matrices follow the active
+// camera; they are rebuilt every frame by the render loop.
 
 // Optional frame limit for automated validation runs; without the
 // argument the template runs until Escape is pressed.
@@ -781,14 +813,35 @@ window.Run((currentWindow, deltaTime) =>
         Console.WriteLine($"Sky mode: {skyMode}");
     }
 
+    // Cycle the active camera view on the C key.
+
+    if (currentWindow.Input.Keyboard.IsKeyPressed(KeyCode.C))
+    {
+        activeCameraIndex = (activeCameraIndex + 1) % cameras.Count;
+
+        Console.WriteLine(
+            $"Camera view: {cameraViews[activeCameraIndex]}.");
+    }
+
+    // The active camera drives the view: composite matrices and the
+    // audio listener follow it every frame.
+
+    var activeCamera = cameras[activeCameraIndex];
+
+    var viewProjection = activeCamera.ViewMatrix * activeCamera.ProjectionMatrix;
+
+    var skyMatrix = Matrix4x4.CreateTranslation(activeCamera.Transform.Position);
+
+    var skyBoxComposite = skyMatrix * viewProjection;
+
     renderer!.Clear(0.1f, 0.15f, 0.35f, 1.0f);
 
-    // The audio listener follows the camera: position and orientation
-    // push into OpenAL every frame so the emitter mixes relative to
-    // the view.
+    // The audio listener follows the active camera: position and
+    // orientation push into OpenAL every frame so the emitter mixes
+    // relative to the view.
 
-    listener!.Transform.Position = camera.Transform.Position;
-    listener.Transform.Rotation = camera.Transform.Rotation;
+    listener!.Transform.Position = activeCamera.Transform.Position;
+    listener.Transform.Rotation = activeCamera.Transform.Rotation;
     listener.Synchronize();
 
     // Shadow pass: depth of the ground and the models from the light.

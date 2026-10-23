@@ -360,6 +360,10 @@ before the next; engine additions ride along in Core/Infrastructure):
       16-bit mono PCM at the cone position (OpenAL spatializes mono
       only), listener following the camera transform every frame;
       device disposed on close, looping verified at close, clean exit
+- [x] Step 7 - Multiple camera views: C key cycles orbit / cow-side /
+      top-down cameras; view-projection, sky container matrices and
+      audio listener rebuild from the active camera every frame
+      (both new views capture-verified)
 - [ ] Step 7 - Multiple camera views
 - [ ] Step 8 - Core Template closure (checklist confirmation)
 
