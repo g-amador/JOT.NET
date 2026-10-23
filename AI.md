@@ -380,7 +380,13 @@ before the next; engine additions ride along in Core/Infrastructure):
       triangle counts plus local bounds. Orbit camera pulled back to
       frame the larger set. Capture-verified: duck/warhawk/TIE/x-wing
       render with their real embedded textures, cow/Duke (no embedded
-      diffuse in the files) render with the fallback materials texture.
+      falling back to the materials-directory texture. Untextured
+      imports (no embedded diffuse in the file) render with the
+      assigned fallback material.
+- [x] Step 7c - obj sphere model: assets/models/obj/sphere.obj
+      (unit UV sphere, radius 1, generated placeholder; v/vt/vn
+      shared smooth normals), placed in the scene at ground height
+      (bounds load-verified: exact -1..+1, 1024 triangles).
 - [ ] Step 8 - Core Template closure (checklist confirmation)
 
 # CURRENT STATUS
@@ -545,6 +551,7 @@ FileNotFoundException pointing at the missing model path):
 | assets/models/glTF/x_wing.glb     | spacecraft    | flying scene model           |
 | assets/models/obj/brick_cube.obj  | brick cube    | textured cubes               |
 | assets/models/obj/cone.obj        | mountain cone | cone next to a test emitter  |
+| assets/models/obj/sphere.obj      | sphere        | sand-textured ground sphere  |
 | assets/textures/materials/*       | materials     | per-model fallback textures (meshes without an embedded texture) |
 | assets/textures/skybox/desert     | desert sky    | the active sky box container |
 | assets/textures/skydome/*.jpg     | panorama sky  | the active sky dome container|

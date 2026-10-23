@@ -666,6 +666,8 @@ window.Run((currentWindow, deltaTime) =>
                 CreateTransform(new Vector3(3.2f, 0.0f, -0.6f), Vector3.One, 0.7f, 0.0f)),
             ("obj/cone.obj", "stucco", "stucco-lambertian.png",
                 CreateTransform(new Vector3(4.5f, 0.0f, -3.0f), new Vector3(2.2f, 2.8f, 2.2f), 0.0f, 0.0f)),
+            ("obj/sphere.obj", "sand", "sand-lambertian.png",
+                CreateTransform(new Vector3(-2.8f, 0.8f, 1.8f), new Vector3(0.8f), 0.0f, 0.0f)),
         };
 
         foreach (var instance in sceneInstances)
