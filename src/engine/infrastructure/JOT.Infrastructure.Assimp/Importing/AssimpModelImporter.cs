@@ -1,7 +1,7 @@
 using Assimp;
-using AssimpMatrix = Assimp.Matrix4x4;
 using StbImageSharp;
 using System.Numerics;
+using AssimpMatrix = Assimp.Matrix4x4;
 
 namespace JOT.Infrastructure.Assimp.Importing;
 

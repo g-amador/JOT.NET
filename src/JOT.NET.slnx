@@ -4,8 +4,8 @@
     <Project Path="clients/client-desktop/JOT.Client.Desktop/JOT.Client.Desktop.csproj" />
   </Folder>
   <Folder Name="/Demos/">
-    <Project Path="demos/examples/AudioDemo/AudioDemo.csproj" />
-    <Project Path="demos/examples/RayDemo/RayDemo.csproj" />
+    <Project Path="demos/AudioDemo/AudioDemo.csproj" />
+    <Project Path="demos/RayDemo/RayDemo.csproj" />
   </Folder>
   <Folder Name="/Engine/" />
   <Folder Name="/Engine/Core/">

@@ -208,7 +208,7 @@ dotnet run --project src/templates/CoreTemplate
 Phase 2 — Core validation checklists:
 
 ```bash
-dotnet run --project src/demos/examples/AudioDemo
+dotnet run --project src/demos/AudioDemo
 ```
 
 Math (JOT.Core.Math) — build-validated:
@@ -239,6 +239,12 @@ Audio (AudioDemo) — runtime-validated:
 - [ ] All audio is rendered by the engine (no Console.Beep) and plays positionally to the right of the listener.
 - [ ] Any key stops playback early.
 - [ ] Q quits the menu, the device disposes, and the application exits cleanly.
+
+Path Tracing (RayDemo) — runtime-validated:
+- [ ] smallpt-faithful CPU Monte Carlo path tracer (modified Cornell box, GI, diffuse/specular/glass BRDFs, explicit light sampling, tent antialiasing, Russian roulette).
+- [ ] Tracing runs on dedicated big-stack threads striped over all logical cores, one pass at a time (passes advance ~2.8 s at 480x320).
+- [ ] The image renders live in an engine window; no disk output; Escape closes it, and it auto-closes at the pass budget.
+- [ ] `dotnet run --project src/demos/RayDemo` flags: `--width/--height/--samples/--frames/--seconds`.
 
 [Back to Table of Contents](#toc)
 

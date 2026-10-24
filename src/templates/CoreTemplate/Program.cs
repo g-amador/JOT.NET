@@ -4,7 +4,6 @@
 // the view-projection, sky containers and audio listener all follow
 // the active camera.
 
-using System.Numerics;
 using JOT.Core.Audio;
 using JOT.Core.Math.Geometry;
 using JOT.Core.Math.Transformations;
@@ -18,6 +17,7 @@ using JOT.Infrastructure.Silk.Audio;
 using JOT.Infrastructure.Silk.Graphics;
 using JOT.Infrastructure.Silk.Input;
 using JOT.Infrastructure.Silk.Windowing;
+using System.Numerics;
 
 // The textured scene uses the fixed interleaved vertex layout from
 // Mesh: position (3), color (3), normal (3), uv (2).
@@ -661,11 +661,12 @@ Transform CreateTransform(
     float yaw,
     float pitch)
 {
-    var transform = new Transform();
-
-    transform.Position = position;
-    transform.Rotation = Quaternion.CreateFromYawPitchRoll(yaw, pitch, 0.0f);
-    transform.Scale = scale;
+    var transform = new Transform
+    {
+        Position = position,
+        Rotation = Quaternion.CreateFromYawPitchRoll(yaw, pitch, 0.0f),
+        Scale = scale
+    };
 
     return transform;
 }
@@ -1502,7 +1503,7 @@ audioDevice?.Dispose();
 
 // Identifies one textured, positioned entry of the scene composition.
 
-record SceneItem(
+internal record SceneItem(
     IVertexBuffer Buffer,
     ITexture2D Texture,
     Transform Transform);

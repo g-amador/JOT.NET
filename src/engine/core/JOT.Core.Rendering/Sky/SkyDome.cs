@@ -1,4 +1,3 @@
-using System.Numerics;
 using JOT.Core.Rendering.Meshes;
 
 namespace JOT.Core.Rendering.Sky;

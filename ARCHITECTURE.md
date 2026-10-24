@@ -60,13 +60,12 @@ JOT.NET/
     │           ├── JOT.Client.Desktop.csproj
     │           └── Program.cs
     ├── demos/
-    │   └── examples/
-    │       ├── AudioDemo/
-    │       │   ├── AudioDemo.csproj
-    │       │   └── Program.cs
-    │       └── RayDemo/
-    │           ├── RayDemo.csproj
-    │           └── Program.cs
+    │   ├── AudioDemo/
+    │   │   ├── AudioDemo.csproj
+    │   │   └── Program.cs
+    │   └── RayDemo/
+    │       ├── RayDemo.csproj
+    │       └── Program.cs
     ├── templates/
     │   ├── CoreTemplate/
     │   │   ├── CoreTemplate.csproj

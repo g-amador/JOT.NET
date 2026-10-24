@@ -99,13 +99,12 @@ JOT.NET/
     │           ├── JOT.Client.Desktop.csproj
     │           └── Program.cs
     ├── demos/
-    │   └── examples/
-    │       ├── AudioDemo/
-    │       │   ├── AudioDemo.csproj
-    │       │   └── Program.cs
-    │       └── RayDemo/
-    │           ├── RayDemo.csproj
-    │           └── Program.cs
+    │   ├── AudioDemo/
+    │   │   ├── AudioDemo.csproj
+    │   │   └── Program.cs
+    │   └── RayDemo/
+    │       ├── RayDemo.csproj
+    │       └── Program.cs
     ├── templates/
     │   ├── CoreTemplate/
     │   │   ├── CoreTemplate.csproj
@@ -414,26 +413,44 @@ before the next; engine additions ride along in Core/Infrastructure):
       (unit UV sphere, radius 1, generated placeholder; v/vt/vn
       shared smooth normals), placed in the scene at ground height
       (bounds load-verified: exact -1..+1, 1024 triangles).
-- [x] Step 7d - RayDemo (src/demos/examples/RayDemo): CPU Monte Carlo
+- [x] Step 7d - RayDemo (src/demos/RayDemo): CPU Monte Carlo
       path tracer in smallpt style (99-line smallpt by Kevin Beason
-      honored): a glass sphere, a mirror cube and a diffuse cone
-      inside a small closed Cornell-room (tinted side walls), lit by
-      an emissive sphere lamp. BRDF set: ideal diffuse with
-      cosine-weighted hemisphere importance sampling, ideal specular
-      reflection and ideal dielectric glass with Schlick-Fresnel
-      reflect/refract splitting; Russian roulette path depth;
-      per-pixel jitter; gamma 2.2 tonemap. Soft shadows and diffuse
-      color bleeding emerge from sampling. Core reuse: JOT.Core.Math
-      Ray primitive and the Core.Math RayIntersections wall-plane
-      intersections; the sphere/box/capped-cone closest-hit queries
-      and BRDF machinery stand in the demo because the Core.Math
-      intersection helpers expose boolean tests only. Outputs a BMP
-      (raydemo.bmp; flags --width/--height/--samples/--output,
-      defaults 480x320 at 64 samples). Verified: render completes,
-      glass refraction (blue wall seen through the sphere), tint
-      bleeding on the walls, mirror and diffuse objects correct; the
-      remaining speckle is the smallpt-style path noise converging
-      with sample count.
+      honored, including its two published modifications at
+      kevinbeason.com/smallpt/#mods): the modified Cornell box from
+      smallpt with its original constants — a diffuse luminaire on
+      the ceiling between a red and a blue wall, a mirror sphere and
+      a glass sphere on a white floor, all geometry as ray-sphere
+      tests (walls are radius-1e5 spheres). Feature set: global
+      illumination via unbiased Monte Carlo path tracing; ideal
+      diffuse with cosine importance sampling of the hemisphere;
+      ideal specular; dielectric glass with Fresnel reflect/refract
+      and Russian roulette + splitting for the glass branches (both
+      branches weighted by Fresnel probability while shallow, one
+      Fresnel-Roulette ray deeper); Russian roulette termination by
+      largest albedo channel beyond five bounces; explicit light
+      sampling (soft shadows from the diffuse luminaire via
+      solid-angle cone sampling, with lamp emission suppressed on the
+      indirect bounce so the estimator stays unbiased) and a
+      non-branching ray tree (the two modifications); tent-distributed
+      antialiasing across 2x2 subpixels with per-stratum
+      accumulation; clamp + gamma 2.2 tonemap like smallpt's toInt.
+      Engine reuse is display-only (JOT.Infrastructure.Silk window,
+      fullscreen quad, texture upload for the progressive preview);
+      the tracer is demo-local with a double-precision Vec3
+      (System.Numerics float precision does not suffice). Parallelism
+      matches smallpt's OpenMP row loop: one pass at a time striped
+      over all logical cores through dynamically claimed columns on
+      dedicated big-stack threads (Roulette chains through the
+      mirror/glass surfaces are unbounded by design, so pooled
+      small-stack threads would overflow). No disk output: the image
+      renders live in an engine window and closes on Escape; invoked
+      via dotnet run --project src/demos/RayDemo with flags
+      --width/--height/--samples (samples per subpixel, pixel total
+      is four times that; default 480x320 at 250) /--frames N (close
+      after N display passes; 0 closes on the first pass)
+      /--seconds N (real-time validation limit). Verified: passes
+      advance (~2.8 s/pass at 480x320), clean early close via
+      --seconds, auto-close at the pass target, build 0 errors.
 - [x] Step 7e - On-screen key options help: the template draws a
       two-dimensional HUD line over the scene ("8 TEXTURES | 9
       WIREFRAME | 0 CONTAINERS | S SKY | C CAMERA") through a
@@ -448,6 +465,20 @@ before the next; engine additions ride along in Core/Infrastructure):
       Capture-verified: glyphs render correctly over the translucent
       bar at the bottom-left.
 - [ ] Step 8 - Core Template closure (checklist confirmation)
+
+# PLANNED FOLLOW-UPS (NOT STARTED)
+
+- [ ] Future CUDA consumption: adapt selected demos to run on CUDA,
+      with Infrastructure/Core able to consume it. Per the
+      no-future-phase rule nothing is scaffolded yet; when started
+      this becomes a new JOT.Infrastructure.Cuda project (CUDA
+      runtime interop via P/Invoke against the CUDA driver/runtime
+      API, device buffer + kernel-launch glue behind an
+      IGraphicsContext-style port, CPU fallback per the assets/
+      fail-loudly philosophy) and demos keep a working CPU path so
+      both backends remain runnable and honest in validation.
+      RayDemo is the primary adaptation candidate (its tracer is
+      demo-local and embarrasingly parallel per stratum).
 
 # CURRENT STATUS
 
