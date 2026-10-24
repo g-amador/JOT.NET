@@ -7,61 +7,73 @@ JOT.NET/
 ├── LICENSE                         # License details
 ├── README.md                       # Main project documentation
 ├── assets/
-│   └── sounds/                     # Game-ready PCM WAV library (categorized)
-│       ├── Collisions/
-│       ├── Effects/
-│       ├── Music/
-│       ├── Powerups/
-│       ├── Ships/
-│       ├── UI/
-│       └── Weapons/
+│   ├── HOG2/                       # Benchmark maps for pathfinding research
+│   ├── models/                     # Wavefront OBJ (.obj) + glTF 2 (.gltf/.glb) library
+│   │   ├── glTF/
+│   │   ├── kenney_blaster-kit_2.1/
+│   │   ├── kenney_racing-kit/
+│   │   ├── kenney_space-kit/
+│   │   ├── kenney_watercraft-pack/
+│   │   └── obj/
+│   ├── sounds/                     # Game-ready PCM WAV library (categorized)
+│   │   ├── Collisions/
+│   │   ├── Effects/
+│   │   ├── Music/
+│   │   ├── Powerups/
+│   │   ├── Ships/
+│   │   ├── UI/
+│   │   └── Weapons/
+│   └── textures/                   # Texture library (materials, skybox, skydome)
+│       ├── materials/
+│       ├── skybox/
+│       └── skydome/
 └── src/
     ├── Directory.Packages.props
     ├── JOT.NET.slnx
-    ├── client-browser/
-    │   └── JOT.Client.Browser/
-    │       ├── _Imports.razor
-    │       ├── App.razor
-    │       ├── JOT.Client.Browser.csproj
-    │       ├── Program.cs
-    │       ├── Layout/
-    │       │   ├── MainLayout.razor
-    │       │   ├── MainLayout.razor.css
-    │       │   ├── NavMenu.razor
-    │       │   └── NavMenu.razor.css
-    │       ├── Pages/
-    │       │   ├── Counter.razor
-    │       │   ├── Home.razor
-    │       │   ├── NotFound.razor
-    │       │   └── Weather.razor
-    │       ├── Properties/
-    │       │   └── launchSettings.json
-    │       └── wwwroot/
-    │           ├── index.html
-    │           ├── css/
-    │           │   └── app.css
-    │           └── sample-data/
-    │               └── weather.json
-    ├── client-desktop/
-    │   └── JOT.Client.Desktop/
-    │       ├── JOT.Client.Desktop.csproj
-    │       └── Program.cs
-    ├── demos/
-    │   ├── examples/
-    │   │   └── AudioDemo/
-    │   │       ├── AudioDemo.csproj
-    │   │       └── Program.cs
-    │   ├── smoke/
-    │   │   └── CoreRenderingSmoke/
-    │   │       ├── CoreRenderingSmoke.csproj
-    │   │       └── Program.cs
-    │   └── templates/
-    │       ├── CoreTemplate/
-    │       │   ├── CoreTemplate.csproj
-    │       │   └── Program.cs
-    │       └── FullTemplate/
-    │           ├── FullTemplate.csproj
+    ├── clients/
+    │   ├── client-browser/
+    │   │   └── JOT.Client.Browser/
+    │   │       ├── _Imports.razor
+    │   │       ├── App.razor
+    │   │       ├── JOT.Client.Browser.csproj
+    │   │       ├── Program.cs
+    │   │       ├── Layout/
+    │   │       │   ├── MainLayout.razor
+    │   │       │   ├── MainLayout.razor.css
+    │   │       │   ├── NavMenu.razor
+    │   │       │   └── NavMenu.razor.css
+    │   │       ├── Pages/
+    │   │       │   ├── Counter.razor
+    │   │       │   ├── Home.razor
+    │   │       │   ├── NotFound.razor
+    │   │       │   └── Weather.razor
+    │   │       ├── Properties/
+    │   │       │   └── launchSettings.json
+    │   │       └── wwwroot/
+    │   │           ├── index.html
+    │   │           ├── css/
+    │   │           │   └── app.css
+    │   │           └── sample-data/
+    │   │               └── weather.json
+    │   └── client-desktop/
+    │       └── JOT.Client.Desktop/
+    │           ├── JOT.Client.Desktop.csproj
     │           └── Program.cs
+    ├── demos/
+    │   └── examples/
+    │       ├── AudioDemo/
+    │       │   ├── AudioDemo.csproj
+    │       │   └── Program.cs
+    │       └── RayDemo/
+    │           ├── RayDemo.csproj
+    │           └── Program.cs
+    ├── templates/
+    │   ├── CoreTemplate/
+    │   │   ├── CoreTemplate.csproj
+    │   │   └── Program.cs
+    │   └── FullTemplate/
+    │       ├── FullTemplate.csproj
+    │       └── Program.cs
     ├── engine/
     │   ├── core/
     │   │   ├── JOT.Core.Audio/

@@ -138,20 +138,24 @@ Browser Support: To maximize accessibility and reuse, browser clients are implem
 JOT.NET/
 ├── AI.md                           # Prompts for expanding the game
 ├── ARCHITECTURE.md                 # Detailed project architecture & directory structure
+├── assets/
+│   ├── HOG2/                       # Benchmark maps for pathfinding research
+│   ├── models/                     # Wavefront OBJ (.obj) + glTF 2 (.gltf/.glb) library
+│   ├── sounds/                     # Game-ready PCM WAV library (categorized)
+│   └── textures/                   # Texture library (materials, skybox, skydome)
 ├── LICENSE                         # License details
 ├── README.md                       # Main project documentation
 └── src/
     ├── JOT.NET.slnx
-    ├── assets
-    ├── client-browser/
-    ├── client-desktop/
+    ├── clients/
     ├── demos/
     ├── engine/
-    │   ├── infrastructure/
     │   ├── core/
+    │   ├── infrastructure/
     │   ├── toolkits/
     │   └── framework/
-    └── server/
+    ├── server/
+    └── templates/
 ```
 
 For a complete, file-by-file breakdown of the repository, see [ARCHITECTURE.md](https://github.com/g-amador/JOT.NET/blob/main/ARCHITECTURE.md).
@@ -198,13 +202,12 @@ dotnet build
 ### Verification
 
 ```bash
-dotnet run --project src/demos/templates/CoreTemplate
+dotnet run --project src/templates/CoreTemplate
 ```
 
-Phase 2 — Core validation checklists (disposable smoke harnesses):
+Phase 2 — Core validation checklists:
 
 ```bash
-dotnet run --project src/demos/smoke/CoreRenderingSmoke
 dotnet run --project src/demos/examples/AudioDemo
 ```
 
@@ -217,7 +220,7 @@ Math (JOT.Core.Math) — build-validated:
 - [ ] Frustum.Contains(Vector3) performs point-inclusion culling tests.
 - [ ] FrustumIntersections tests spheres and axis-aligned boxes against the frustum.
 
-Rendering (CoreRenderingSmoke) — runtime-validated:
+Rendering (CoreTemplate) — runtime-validated:
 - [ ] IGraphicsContext glue gains CreateShaderProgram, CreateVertexBuffer, and DrawTriangles.
 - [ ] SilkShaderProgram compiles and links vertex and fragment shader sources.
 - [ ] SilkVertexBuffer uploads vertex data and issues triangle draws.
@@ -246,9 +249,9 @@ Audio (AudioDemo) — runtime-validated:
 To launch a project:
 
 ```bash
-dotnet run --project src/demos/templates/CoreTemplate
+dotnet run --project src/templates/CoreTemplate
 # PR
-dotnet run --project src/demos/templates/FullTemplate
+dotnet run --project src/templates/FullTemplate
 ```
 
 [Back to Table of Contents](#toc)

@@ -46,61 +46,73 @@ JOT.NET/
 ├── LICENSE                         # License details
 ├── README.md                       # Main project documentation
 ├── assets/
-│   └── sounds/                     # Game-ready PCM WAV library (categorized)
-│       ├── Collisions/
-│       ├── Effects/
-│       ├── Music/
-│       ├── Powerups/
-│       ├── Ships/
-│       ├── UI/
-│       └── Weapons/
+│   ├── HOG2/                       # Benchmark maps for pathfinding research
+│   ├── models/                     # Wavefront OBJ (.obj) + glTF 2 (.gltf/.glb) library
+│   │   ├── glTF/
+│   │   ├── kenney_blaster-kit_2.1/
+│   │   ├── kenney_racing-kit/
+│   │   ├── kenney_space-kit/
+│   │   ├── kenney_watercraft-pack/
+│   │   └── obj/
+│   ├── sounds/                     # Game-ready PCM WAV library (categorized)
+│   │   ├── Collisions/
+│   │   ├── Effects/
+│   │   ├── Music/
+│   │   ├── Powerups/
+│   │   ├── Ships/
+│   │   ├── UI/
+│   │   └── Weapons/
+│   └── textures/                   # Texture library (materials, skybox, skydome)
+│       ├── materials/
+│       ├── skybox/
+│       └── skydome/
 └── src/
     ├── Directory.Packages.props
     ├── JOT.NET.slnx
-    ├── client-browser/
-    │   └── JOT.Client.Browser/
-    │       ├── _Imports.razor
-    │       ├── App.razor
-    │       ├── JOT.Client.Browser.csproj
-    │       ├── Program.cs
-    │       ├── Layout/
-    │       │   ├── MainLayout.razor
-    │       │   ├── MainLayout.razor.css
-    │       │   ├── NavMenu.razor
-    │       │   └── NavMenu.razor.css
-    │       ├── Pages/
-    │       │   ├── Counter.razor
-    │       │   ├── Home.razor
-    │       │   ├── NotFound.razor
-    │       │   └── Weather.razor
-    │       ├── Properties/
-    │       │   └── launchSettings.json
-    │       └── wwwroot/
-    │           ├── index.html
-    │           ├── css/
-    │           │   └── app.css
-    │           └── sample-data/
-    │               └── weather.json
-    ├── client-desktop/
-    │   └── JOT.Client.Desktop/
-    │       ├── JOT.Client.Desktop.csproj
-    │       └── Program.cs
-    ├── demos/
-    │   ├── examples/
-    │   │   └── AudioDemo/
-    │   │       ├── AudioDemo.csproj
-    │   │       └── Program.cs
-    │   ├── smoke/
-    │   │   └── CoreRenderingSmoke/
-    │   │       ├── CoreRenderingSmoke.csproj
-    │   │       └── Program.cs
-    │   └── templates/
-    │       ├── CoreTemplate/
-    │       │   ├── CoreTemplate.csproj
-    │       │   └── Program.cs
-    │       └── FullTemplate/
-    │           ├── FullTemplate.csproj
+    ├── clients/
+    │   ├── client-browser/
+    │   │   └── JOT.Client.Browser/
+    │   │       ├── _Imports.razor
+    │   │       ├── App.razor
+    │   │       ├── JOT.Client.Browser.csproj
+    │   │       ├── Program.cs
+    │   │       ├── Layout/
+    │   │       │   ├── MainLayout.razor
+    │   │       │   ├── MainLayout.razor.css
+    │   │       │   ├── NavMenu.razor
+    │   │       │   └── NavMenu.razor.css
+    │   │       ├── Pages/
+    │   │       │   ├── Counter.razor
+    │   │       │   ├── Home.razor
+    │   │       │   ├── NotFound.razor
+    │   │       │   └── Weather.razor
+    │   │       ├── Properties/
+    │   │       │   └── launchSettings.json
+    │   │       └── wwwroot/
+    │   │           ├── index.html
+    │   │           ├── css/
+    │   │           │   └── app.css
+    │   │           └── sample-data/
+    │   │               └── weather.json
+    │   └── client-desktop/
+    │       └── JOT.Client.Desktop/
+    │           ├── JOT.Client.Desktop.csproj
     │           └── Program.cs
+    ├── demos/
+    │   └── examples/
+    │       ├── AudioDemo/
+    │       │   ├── AudioDemo.csproj
+    │       │   └── Program.cs
+    │       └── RayDemo/
+    │           ├── RayDemo.csproj
+    │           └── Program.cs
+    ├── templates/
+    │   ├── CoreTemplate/
+    │   │   ├── CoreTemplate.csproj
+    │   │   └── Program.cs
+    │   └── FullTemplate/
+    │       ├── FullTemplate.csproj
+    │       └── Program.cs
     ├── engine/
     │   ├── core/
     │   │   ├── JOT.Core.Audio/
@@ -156,7 +168,16 @@ JOT.NET/
     │   │       └── JOT.Framework.Managers.csproj
     │   ├── infrastructure/
     │   │   ├── JOT.Infrastructure.Assimp/
-    │   │   │   └── JOT.Infrastructure.Assimp.csproj
+    │   │   │   ├── JOT.Infrastructure.Assimp.csproj
+    │   │   │   └── Importing/
+    │   │   │       ├── IImageLoader.cs
+    │   │   │       ├── IModelImporter.cs
+    │   │   │       ├── ImportedMaterial.cs
+    │   │   │       ├── ImportedMesh.cs
+    │   │   │       ├── ImportedModel.cs
+    │   │   │       ├── AssimpModelImporter.cs
+    │   │   │       ├── RawImage.cs
+    │   │   │       └── StbImageLoader.cs
     │   │   ├── JOT.Infrastructure.DotNetty/
     │   │   │   └── JOT.Infrastructure.DotNetty.csproj
     │   │   └── JOT.Infrastructure.Silk/
@@ -169,9 +190,15 @@ JOT.NET/
     │   │       ├── Graphics/
     │   │       │   ├── IGraphicsContext.cs
     │   │       │   ├── IShaderProgram.cs
+    │   │       │   ├── IShadowRenderTarget.cs
+    │   │       │   ├── ITexture2D.cs
+    │   │       │   ├── ITextureCubeMap.cs
     │   │       │   ├── IVertexBuffer.cs
     │   │       │   ├── SilkGraphicsContext.cs
     │   │       │   ├── SilkShaderProgram.cs
+    │   │       │   ├── SilkShadowRenderTarget.cs
+    │   │       │   ├── SilkTexture2D.cs
+    │   │       │   ├── SilkTextureCubeMap.cs
     │   │       │   └── SilkVertexBuffer.cs
     │   │       ├── Input/
     │   │       │   ├── IInputContext.cs
@@ -453,7 +480,7 @@ Build and runtime validation have been performed.
 
 Full Phase 2 validation checklist:
 
-Validation basis: Math items are build-validated; Rendering and Audio items are runtime-validated by the disposable smoke harnesses. Unticked boxes await your confirmation.
+Validation basis: Math items are build-validated; Rendering items are runtime-validated by CoreTemplate, and Audio items are runtime-validated by the AudioDemo demo. Unticked boxes await your confirmation.
 
 Math (JOT.Core.Math):
 - [ ] Transform composes world matrices from position, rotation, and scale.
@@ -464,7 +491,7 @@ Math (JOT.Core.Math):
 - [ ] Frustum.Contains(Vector3) performs point-inclusion culling tests.
 - [ ] FrustumIntersections tests spheres and axis-aligned boxes against the frustum.
 
-Rendering (CoreRenderingSmoke):
+Rendering (CoreTemplate):
 - [ ] IGraphicsContext glue gains CreateShaderProgram, CreateVertexBuffer, and DrawTriangles.
 - [ ] SilkShaderProgram compiles and links vertex and fragment shader sources.
 - [ ] SilkVertexBuffer uploads vertex data and issues triangle draws.
@@ -485,7 +512,7 @@ Audio (AudioDemo):
 - [ ] Q quits the menu, the device disposes, and the application exits cleanly.
 
 Solution and docs:
-- [ ] JOT.Core.Audio and both smoke harnesses are wired under /Demos in JOT.NET.slnx.
+- [ ] Demo examples (AudioDemo, RayDemo) are wired under /Demos, templates under /Templates, and clients under /Clients in JOT.NET.slnx.
 - [ ] AI.md, README.md, and ARCHITECTURE.md trees and statuses match the implemented state.
 
 ### JOT.Core.Math
