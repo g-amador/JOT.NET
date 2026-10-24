@@ -23,7 +23,7 @@ listener.Synchronize();
 while (true)
 {
     Console.WriteLine();
-    Console.WriteLine("JOT.NET audio smoke");
+    Console.WriteLine("JOT.NET audio");
     Console.WriteLine("  1 - Procedural sine wave (engine)");
     Console.WriteLine("  2 - WAV file (engine): Weapons/pdp1_fire.wav");
     Console.WriteLine("  3 - Super Mario theme (engine)");
@@ -98,7 +98,7 @@ while (true)
     }
 }
 
-Console.WriteLine("Audio smoke closed normally.");
+Console.WriteLine("Audio closed normally.");
 
 static void Play(
     IAudioDevice device,
