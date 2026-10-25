@@ -478,7 +478,7 @@ before the next; engine additions ride along in Core/Infrastructure):
       fail-loudly philosophy) and demos keep a working CPU path so
       both backends remain runnable and honest in validation.
       RayDemo is the primary adaptation candidate (its tracer is
-      demo-local and embarrasingly parallel per stratum).
+      demo-local and embarrassingly parallel per stratum).
 
 # CURRENT STATUS
 
