@@ -18,6 +18,12 @@
 // wall pass's per-column depth buffer deciding occlusion and an
 // alpha test keeping transparent sprite margins clear.
 //
+// Positional audio rides on the existing Core.Audio glue (as in
+// AudioDemo): one looping emitter per enemy at its spawn position and
+// the listener synced to the camera every frame, so enemies are heard
+// from where they stand — distance attenuates, and left/right follows
+// the view direction.
+//
 // Movement and turning are keyboard-only for the first milestones
 // (mouse look would require new Infrastructure input glue and rides
 // along later): the arrows walk and turn, with per-axis move tests
@@ -32,10 +38,13 @@
 // after --seconds; a one-level 2.5D FPS demo builds on this demo in a
 // later step (R2).
 
+using JOT.Core.Audio;
 using JOT.Infrastructure.Assimp.Importing;
+using JOT.Infrastructure.Silk.Audio;
 using JOT.Infrastructure.Silk.Graphics;
 using JOT.Infrastructure.Silk.Input;
 using JOT.Infrastructure.Silk.Windowing;
+using System.Numerics;
 
 // Render configuration; overridable through the command line.
 
@@ -197,6 +206,46 @@ Console.WriteLine(
     $"Enemy sprite: CommandoIdle.png "
     + $"{enemySpriteWidth}x{enemySpriteHeight}.");
 
+// Positional audio: one looping emitter per enemy at its spawn
+// position; the listener syncs to the camera every frame inside the
+// window loop. The damage1 vocal asset stands in for the enemy idle
+// sound until the enemies themselves animate (R2c); the first two
+// candidates were rejected loudly by WaveFile (a compressed WAV and
+// an 8-bit PCM WAV) — honest failures that picked this uncompressed
+// 16-bit PCM file instead.
+
+using var audioDevice = new SilkAudioDevice();
+
+var listener = new Listener(audioDevice);
+
+var enemySoundPath = FindSoundPath("Weapons", "damage1.wav");
+
+var enemyWave = WaveFile.Load(enemySoundPath);
+
+var enemyEmitters = new List<SoundEmitter>();
+
+foreach (var enemy in enemies)
+{
+    var emitter = new SoundEmitter(
+        audioDevice,
+        enemyWave.Samples,
+        enemyWave.SampleRate,
+        enemyWave.Channels)
+    {
+        Position = new Vector3((float)enemy.X, 0.0f, (float)enemy.Y),
+
+        Looping = true,
+    };
+
+    emitter.Play();
+
+    enemyEmitters.Add(emitter);
+}
+
+Console.WriteLine(
+    $"Audio: {enemyEmitters.Count} looping enemy emitters "
+    + $"({enemyWave.SampleRate} Hz, {enemyWave.Channels} channel(s)).");
+
 // Spawn at the center of the first open cell, facing east. The camera
 // plane is perpendicular to the direction; its length sets the field
 // of view (0.66 is the tutorial's choice, about 66 degrees).
@@ -354,6 +403,36 @@ static string FindSpritePath(string fileName)
 
     throw new FileNotFoundException(
         "Could not find assets/2dot5D/Enemy Characters and Animations/"
+        + fileName
+        + " relative to the build output.");
+}
+
+// Locates a sound in the WAV library by walking up from the build
+// output (the convention shared with the other asset lookups).
+
+static string FindSoundPath(string folder, string fileName)
+{
+    var directory = new DirectoryInfo(AppContext.BaseDirectory);
+
+    while (directory is not null)
+    {
+        var candidate = Path.Combine(
+            directory.FullName,
+            "assets",
+            "sounds",
+            folder,
+            fileName);
+
+        if (File.Exists(candidate))
+        {
+            return candidate;
+        }
+
+        directory = directory.Parent;
+    }
+
+    throw new FileNotFoundException(
+        $"Could not find assets/sounds/{folder}/"
         + fileName
         + " relative to the build output.");
 }
@@ -903,6 +982,22 @@ window.Run((currentWindow, deltaTime) =>
     {
         turn += TurnSpeed * deltaTime;
     }
+
+    // The audio listener follows the camera every frame. The yaw maps
+    // the demo's map-space direction (x east, y south) into the audio
+    // world so left/right perception matches the view.
+
+    listener.Transform.Position = new Vector3(
+        (float)positionX,
+        0.0f,
+        (float)positionY);
+
+    listener.Transform.Rotation = Quaternion.CreateFromYawPitchRoll(
+        MathF.Atan2(-(float)directionX, -(float)directionY),
+        0f,
+        0f);
+
+    listener.Synchronize();
 
     if (turn != 0.0)
     {

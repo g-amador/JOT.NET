@@ -554,6 +554,22 @@ Core/Infrastructure only when the demo cannot proceed without them):
       raycast01.map carries four spawns. Runtime-validated: build
       0 errors; 4 enemies load; ~57 fps at 480x320 (459 frames in
       8 s, no regression); clean close, exit 0.
+- [x] Step R2b - Positional sounds: the demo now drives the existing
+      Core.Audio glue (as in AudioDemo) — one looping emitter per
+      enemy at its spawn position (damage1.wav, a 16-bit PCM stand-in
+      until enemies animate) and the listener synced to the camera
+      every frame: position from the camera cell and orientation
+      yaw-mapped from the demo's map-space direction so left/right
+      perception matches the view. Setup wrinkles recorded honestly:
+      OpenAL.Soft's natives are not registered for .NET resolution,
+      so the demo carries AudioDemo's build target copying the x64
+      OpenAL32.dll next to the executable; the first sound picks were
+      rejected loudly by WaveFile (a compressed WAV, then an 8-bit
+      PCM WAV) until this uncompressed 16-bit stereo file. csproj
+      gains JOT.Core.Audio. Runtime-validated: build 0 errors; 4
+      looping emitters report (44100 Hz, 2 channels); ~57 fps at
+      480x320 (455 frames in 8 s, no regression); clean close,
+      exit 0.
 - [ ] Step R2b - Positional sounds: enemy and weapon sounds through
       the existing audio glue (as in AudioDemo), so nearby enemies
       are heard from their positions.

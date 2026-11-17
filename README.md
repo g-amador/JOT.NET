@@ -250,6 +250,7 @@ Path Tracing (RayDemo) — runtime-validated:
 Raycasting (RayCastDemo) — runtime-validated:
 - [ ] Wolfenstein-style 2.5D raycasting (per-column DDA walk, textured y-side-shaded wall slices — cement, concrete, brick — with flat colors retired).
 - [ ] Enemy sprites render as depth-buffered billboards from map digit 4 spawns (idle frames; damage/death frames and combat come with the win-condition step).
+- [ ] Positional audio: one looping emitter per enemy heard from its position, with the listener following the camera.
 - [ ] The map loads from the plain-text asset file assets/maps/raycast01.map (digits select wall types; malformed maps fail loudly).
 - [ ] Keyboard movement and turning with per-axis wall sliding; Escape closes it, or --frames/--seconds limits.
 - [ ] `dotnet run --project src/demos/RayCastDemo` flags: `--width/--height/--frames/--seconds`.
