@@ -24,6 +24,7 @@ JOT.NET is currently **experimental and not production ready**. Current prioriti
 - Infrastructure layer implemented and runtime-validated
 - Core engine systems (Math, Rendering, Audio) implemented and runtime-validated
 - Next: Core Template validation, then the Toolkits layer
+- Planned: a Wolfenstein-style 2.5D raycasting FPS level demo (buildable on the completed Core + Infrastructure layers) and a full-stack 3D FPS level demo once all layers are complete
 - Networking architecture prepared for later MMO support
 
 ---

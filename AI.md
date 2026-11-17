@@ -466,7 +466,52 @@ before the next; engine additions ride along in Core/Infrastructure):
       bar at the bottom-left.
 - [ ] Step 8 - Core Template closure (checklist confirmation)
 
+RayCastDemo step sequence (planned; each step runtime-validated in
+RayCastDemo before the next; engine additions ride along in
+Core/Infrastructure only when the demo cannot proceed without them):
+
+- [ ] Step R1 - RayCastDemo (src/demos/RayCastDemo): Wolfenstein-style
+      2.5D raycasting after lodev's tutorial
+      (lodev.org/cgtutor/raycasting.html): per-column DDA walk of a
+      grid map with textured wall slices sampled on the CPU into an
+      RGBA framebuffer, displayed through the proven RayDemo path
+      (SilkWindow + fullscreen quad + per-frame texture upload); the
+      GL texture only carries finished frames, it is never sampled
+      for the wall texture lookups. Wall textures decode once at
+      startup from assets/textures/materials via the existing
+      StbImageLoader. The map loads from an asset file: a plain-text
+      grid under assets/maps/ where digits select wall types and
+      textures; missing or malformed maps fail loudly per the assets
+      rule. First milestone: map file + flat colored walls; second
+      milestone: textured walls. Movement and turning are keyboard
+      only for the first milestones (mouse look would require new
+      Infrastructure input glue and rides along later). Escape
+      closes; flags --width/--height/--frames/--seconds as in
+      RayDemo. Validation conclusion (2026-11-17): Core +
+      Infrastructure suffice — this demo and the one-level 2.5D FPS
+      demo below can be built now; later layers (Toolkits ECS and
+      Physics, Framework Scenes and Assets) would replace only the
+      demo's hand-rolled gameplay plumbing, never the raycasting
+      code itself, so nothing blocks building it ahead of Phase 3.
+- [ ] Step R2 - 2.5D FPS demo (src/demos/RayCastDemo lineage):
+      one playable level on the raycast renderer — grid collision,
+      sprite entities with the per-column depth buffer, positional
+      sounds from the existing audio glue, and a win/exit condition.
+      Built on the completed Core + Infrastructure layers; later
+      Toolkits/Framework features may take over its plumbing, but no
+      feature of it waits on them.
+
 # PLANNED FOLLOW-UPS (NOT STARTED)
+
+- [ ] Final-engine rendering goal: the engine keeps the standard 3D
+      rasterization pipeline as its primary renderer, with the
+      Wolfenstein-style 2.5D raycasting option (the RayCastDemo
+      lineage) alongside it, plus a 3D FPS small level demo on the
+      standard pipeline. The 2.5D one-level FPS demo is buildable now
+      (validation above); the 3D FPS level demo waits until all other
+      layers are complete (Phase 3 Toolkits and Phase 4 Framework),
+      since it exercises scenes, lifecycle and physics gameplay
+      plumbing the Framework/Toolkits layers will provide.
 
 - [ ] Future CUDA consumption: adapt selected demos to run on CUDA,
       with Infrastructure/Core able to consume it. Per the
