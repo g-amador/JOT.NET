@@ -497,7 +497,7 @@ for (var threadIndex = 0; threadIndex < threadCount; ++threadIndex)
             var state = 0x9E3779B97F4A7C15UL
                 ^ (ulong)(uint)(workerIndex * 1013904223u + 40503u);
 
-            for (;;)
+            for (; ; )
             {
                 passBarrier.SignalAndWait();
 
