@@ -573,17 +573,38 @@ Core/Infrastructure only when the demo cannot proceed without them):
 - [ ] Step R2b - Positional sounds: enemy and weapon sounds through
       the existing audio glue (as in AudioDemo), so nearby enemies
       are heard from their positions.
-- [ ] Step R2c - Gun shooting and win/exit condition: a gun sprite
-      overlay from assets/2dot5D/Gun Sprites, hitscan shooting
-      against enemies (ray vs sprite cells), damage/death animation
-      frames, and the level's win/exit condition. Enemy and gun
-      sprite art is already available in the asset library:
-      assets/2dot5D/Enemy Characters and Animations (Commando,
-      Flyguy, and Slayer frames for attack, damage, death, idle, and
-      walk) and assets/2dot5D/Gun Sprites; they decode through the
-      StbImageLoader like the wall textures. Built on the completed
-      Core + Infrastructure layers; later Toolkits/Framework features
-      may take over its plumbing, but no feature of it waits on them.
+- [x] Step R2c - Gun shooting, win/exit condition, and the display
+      orientation fix: Space fires hitscan shots on a short cooldown —
+      a DDA along the exact view direction gives the wall distance,
+      and the nearest living enemy inside its billboard half-width
+      and in front of the wall takes damage: a hit flash
+      (CommandoDamage1) while hit points remain, the four
+      CommandoDeath frames at zero (the death animation silences the
+      enemy's looping emitter, and the last kill is the win: the
+      window closes after the "All enemies defeated" message). The
+      pistol sprite (PIST1.png from assets/2dot5D/Gun Sprites) rides
+      bottom-center as an alpha-tested overlay. Sounds: the gun shot
+      (pdp1_fire.wav) plays at the listener, the hit grunt
+      (damage2.wav) at the target. Two honest fixes landed with this
+      step: (1) the fullscreen quad's UVs mapped framebuffer row 0 to
+      the screen bottom, flipping the whole view vertically —
+      invisible on symmetric wall slices, but it stood the sprites on
+      the ceiling upside down (user-reported); the quad now samples
+      row 0 at the top, and RayDemo was checked and needs no change —
+      its tracer rasterizes bottom-to-top to match its own v mapping,
+      so the two demos are consistent by different, deliberate
+      conventions; (2) the first --autofire validation run defeated
+      three of four enemies and stalled on the fourth because it
+      aimed through a pillar — the validation aid now walks toward
+      the target (the same per-axis collision sliding the player
+      uses) until the line of sight is clear. --autofire (a
+      validation aid, not gameplay) aims at the nearest living enemy,
+      walks when blocked, and fires on cooldown, validating the whole
+      combat loop headlessly. Runtime-validated: build 0 errors;
+      normal run ~57 fps at 480x320 (452 frames in 8 s); --autofire
+      run: four "Enemy defeated" reports, the win message, clean
+      close, exit 0. Enemies still never fight back — attack frames
+      and enemies damaging the player remain future work.
 
 # PLANNED FOLLOW-UPS (NOT STARTED)
 

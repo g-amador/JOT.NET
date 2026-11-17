@@ -247,13 +247,14 @@ Path Tracing (RayDemo) — runtime-validated:
 - [ ] The image renders live in an engine window; no disk output; Escape closes it, and it auto-closes at the pass budget.
 - [ ] `dotnet run --project src/demos/RayDemo` flags: `--width/--height/--samples/--frames/--seconds`.
 
-Raycasting (RayCastDemo) — runtime-validated:
-- [ ] Wolfenstein-style 2.5D raycasting (per-column DDA walk, textured y-side-shaded wall slices — cement, concrete, brick — with flat colors retired).
-- [ ] Enemy sprites render as depth-buffered billboards from map digit 4 spawns (idle frames; damage/death frames and combat come with the win-condition step).
+Raycasting (RayCastDemo) - runtime-validated:
+- [ ] Wolfenstein-style 2.5D raycasting (per-column DDA walk, textured y-side-shaded wall slices - cement, concrete, brick - with flat colors retired).
+- [ ] Enemy sprites render as depth-buffered billboards from map digit 4 spawns, with idle, hit-flash, and death animation frames.
+- [ ] Hitscan combat: Space fires shots (pistol overlay bottom-center, gunshot and hit-grunt sounds); defeating every enemy is the win and closes the window. Enemies do not fight back yet.
 - [ ] Positional audio: one looping emitter per enemy heard from its position, with the listener following the camera.
 - [ ] The map loads from the plain-text asset file assets/maps/raycast01.map (digits select wall types; malformed maps fail loudly).
 - [ ] Keyboard movement and turning with per-axis wall sliding; Escape closes it, or --frames/--seconds limits.
-- [ ] `dotnet run --project src/demos/RayCastDemo` flags: `--width/--height/--frames/--seconds`.
+- [ ] `dotnet run --project src/demos/RayCastDemo` flags: `--width/--height/--frames/--seconds` (plus `--autofire`, a headless validation aid for the combat loop).
 
 [Back to Table of Contents](#toc)
 

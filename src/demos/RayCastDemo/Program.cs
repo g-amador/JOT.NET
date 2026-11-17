@@ -35,8 +35,23 @@
 // wall lookups.
 //
 // The window closes on Escape, after --frames display passes, or
-// after --seconds; a one-level 2.5D FPS demo builds on this demo in a
-// later step (R2).
+// after --seconds. The one-level 2.5D FPS demo (Step R2 lineage) is
+// here: enemies from the map's digit 4 spawns shoot back nothing but
+// can be shot — Space fires hitscan shots (a DDA along the view
+// direction, then the nearest living enemy inside the hit width and
+// in front of the wall takes damage, flashes its damage frame, and
+// dies through the four death frames). The pistol sprite from
+// assets/2dot5D/Gun Sprites rides bottom-center as an overlay, and
+// defeating every enemy prints the win and closes the window.
+// --autofire is a validation aid: it keeps aiming at the nearest
+// living enemy and firing, so the whole combat loop and the win
+// condition can be validated headlessly.
+//
+// Orientation note (fixed 2026-11-17): the fullscreen quad's UVs
+// originally mapped framebuffer row 0 to the screen bottom, flipping
+// the whole view vertically — invisible on symmetric wall slices, but
+// it stood the sprites on the ceiling upside down. The quad now
+// samples row 0 at the top.
 
 using JOT.Core.Audio;
 using JOT.Infrastructure.Assimp.Importing;
@@ -55,6 +70,8 @@ var height = 320;
 var frameLimit = -1;
 
 var secondsLimit = -1;
+
+var autofire = args.Contains("--autofire");
 
 for (var i = 0; i < args.Length - 1; ++i)
 {
@@ -165,7 +182,7 @@ foreach (var wallTexture in wallTextureFiles)
 // Enemy spawns: digit 4 cells are open, and each contributes one
 // enemy at its center.
 
-var enemies = new List<(double X, double Y)>();
+var enemies = new List<Enemy>();
 
 for (var row = 0; row < mapRows; ++row)
 {
@@ -173,60 +190,94 @@ for (var row = 0; row < mapRows; ++row)
     {
         if (map[row, column] == 4)
         {
-            enemies.Add((column + .5, row + .5));
+            enemies.Add(new Enemy { X = column + .5, Y = row + .5 });
         }
     }
 }
 
 Console.WriteLine($"Enemies: {enemies.Count}.");
 
-// Enemy sprite frames decode like the wall textures; the idle frame
-// is the first milestone, walk/attack/death frames follow with the
-// enemy behaviors.
+// Enemy animation frames decode like the wall textures: idle, the
+// hit flash, and the four death frames. Every frame must match the
+// idle frame's dimensions or the demo fails loudly.
 
-var enemySpriteImage = imageLoader.Load(
-    FindSpritePath("CommandoIdle.png"));
+var enemyIdlePixels = DecodeSpriteFrame(
+    imageLoader,
+    "CommandoIdle.png",
+    out var enemySpriteWidth,
+    out var enemySpriteHeight);
 
-if (enemySpriteImage.Pixels.Length
-    != enemySpriteImage.Width * enemySpriteImage.Height * 4)
+var enemyDamagePixels = DecodeSpriteFrame(
+    imageLoader,
+    "CommandoDamage1.png",
+    out var damageWidth,
+    out var damageHeight);
+
+if (damageWidth != enemySpriteWidth || damageHeight != enemySpriteHeight)
 {
     throw new InvalidOperationException(
-        $"{enemySpriteImage.SourcePath}: expected RGBA pixels "
-        + $"({enemySpriteImage.Width}x{enemySpriteImage.Height}x4), got "
-        + $"{enemySpriteImage.Pixels.Length}.");
+        "CommandoDamage1.png dimensions differ from CommandoIdle.png.");
 }
 
-var enemySpritePixels = enemySpriteImage.Pixels;
+var enemyDeathFrames = new[]
+{
+    "CommandoDeath1.png",
+    "CommandoDeath2.png",
+    "CommandoDeath3.png",
+    "CommandoDeath4.png",
+}
+.Select(fileName =>
+{
+    var pixels = DecodeSpriteFrame(
+        imageLoader,
+        fileName,
+        out var deathWidth,
+        out var deathHeight);
 
-var enemySpriteWidth = enemySpriteImage.Width;
+    if (deathWidth != enemySpriteWidth
+        || deathHeight != enemySpriteHeight)
+    {
+        throw new InvalidOperationException(
+            $"{fileName} dimensions differ from CommandoIdle.png.");
+    }
 
-var enemySpriteHeight = enemySpriteImage.Height;
+    return pixels;
+})
+.ToArray();
 
 Console.WriteLine(
-    $"Enemy sprite: CommandoIdle.png "
-    + $"{enemySpriteWidth}x{enemySpriteHeight}.");
+    $"Enemy sprites: idle, damage, and {enemyDeathFrames.Length} "
+    + $"death frames ({enemySpriteWidth}x{enemySpriteHeight}).");
+
+// The gun overlay sprite rides bottom-center of the view.
+
+var gunPixels = DecodeImage(
+    imageLoader,
+    FindSpritePath("Gun Sprites", "PIST1.png"),
+    out var gunWidth,
+    out var gunHeight);
+
+Console.WriteLine(
+    $"Gun overlay: PIST1.png {gunWidth}x{gunHeight}.");
 
 // Positional audio: one looping emitter per enemy at its spawn
-// position; the listener syncs to the camera every frame inside the
-// window loop. The damage1 vocal asset stands in for the enemy idle
-// sound until the enemies themselves animate (R2c); the first two
-// candidates were rejected loudly by WaveFile (a compressed WAV and
-// an 8-bit PCM WAV) — honest failures that picked this uncompressed
-// 16-bit PCM file instead.
+// position (kept on the enemy so the death state can silence it); the
+// listener syncs to the camera every frame inside the window loop.
+// The damage1 vocal asset stands in for the enemy idle sound; the
+// first two candidates were rejected loudly by WaveFile (a compressed
+// WAV and an 8-bit PCM WAV) — honest failures that picked this
+// uncompressed 16-bit PCM file instead. The player's gun shot and the
+// enemy hit grunt are one-shot emitters replayed on demand.
 
 using var audioDevice = new SilkAudioDevice();
 
 var listener = new Listener(audioDevice);
 
-var enemySoundPath = FindSoundPath("Weapons", "damage1.wav");
-
-var enemyWave = WaveFile.Load(enemySoundPath);
-
-var enemyEmitters = new List<SoundEmitter>();
+var enemyWave = WaveFile.Load(FindSoundPath("Weapons", "damage1.wav"));
 
 foreach (var enemy in enemies)
 {
-    var emitter = new SoundEmitter(
+    enemy.Emitter = new SoundEmitter(
         audioDevice,
         enemyWave.Samples,
         enemyWave.SampleRate,
@@ -237,14 +288,28 @@ foreach (var enemy in enemies)
         Looping = true,
     };
 
-    emitter.Play();
-
-    enemyEmitters.Add(emitter);
+    enemy.Emitter.Play();
 }
 
 Console.WriteLine(
-    $"Audio: {enemyEmitters.Count} looping enemy emitters "
+    $"Audio: {enemies.Count} looping enemy emitters "
     + $"({enemyWave.SampleRate} Hz, {enemyWave.Channels} channel(s)).");
+
+var fireWave = WaveFile.Load(FindSoundPath("Weapons", "pdp1_fire.wav"));
+
+var fireEmitter = new SoundEmitter(
+    audioDevice,
+    fireWave.Samples,
+    fireWave.SampleRate,
+    fireWave.Channels);
+
+var hitWave = WaveFile.Load(FindSoundPath("Weapons", "damage2.wav"));
+
+var hitEmitter = new SoundEmitter(
+    audioDevice,
+    hitWave.Samples,
+    hitWave.SampleRate,
+    hitWave.Channels);
 
 // Spawn at the center of the first open cell, facing east. The camera
 // plane is perpendicular to the direction; its length sets the field
@@ -376,11 +441,11 @@ static string FindTexturePath(string fileName)
         + " relative to the build output.");
 }
 
-// Locates an enemy sprite frame in the 2dot5D sprite library by
-// walking up from the build output (the convention shared with the
-// map asset and wall textures).
+// Locates a sprite frame under the 2dot5D sprite library by walking
+// up from the build output (the convention shared with the other
+// asset lookups).
 
-static string FindSpritePath(string fileName)
+static string FindSpritePath(string folder, string fileName)
 {
     var directory = new DirectoryInfo(AppContext.BaseDirectory);
 
@@ -390,7 +455,7 @@ static string FindSpritePath(string fileName)
             directory.FullName,
             "assets",
             "2dot5D",
-            "Enemy Characters and Animations",
+            folder,
             fileName);
 
         if (File.Exists(candidate))
@@ -402,9 +467,49 @@ static string FindSpritePath(string fileName)
     }
 
     throw new FileNotFoundException(
-        "Could not find assets/2dot5D/Enemy Characters and Animations/"
+        $"Could not find assets/2dot5D/{folder}/"
         + fileName
         + " relative to the build output.");
+}
+
+// Decodes one sprite frame and requires RGBA rows; the frame's
+// dimensions come back through the out parameters so callers can
+// cross-check them against the rest of the animation set.
+
+static byte[] DecodeSpriteFrame(
+    StbImageLoader loader,
+    string fileName,
+    out int frameWidth,
+    out int frameHeight)
+{
+    return DecodeImage(
+        loader,
+        FindSpritePath("Enemy Characters and Animations", fileName),
+        out frameWidth,
+        out frameHeight);
+}
+
+static byte[] DecodeImage(
+    StbImageLoader loader,
+    string path,
+    out int imageWidth,
+    out int imageHeight)
+{
+    var image = loader.Load(path);
+
+    if (image.Pixels.Length != image.Width * image.Height * 4)
+    {
+        throw new InvalidOperationException(
+            $"{path}: expected RGBA pixels "
+            + $"({image.Width}x{image.Height}x4), got "
+            + $"{image.Pixels.Length}.");
+    }
+
+    imageWidth = image.Width;
+
+    imageHeight = image.Height;
+
+    return image.Pixels;
 }
 
 // Locates a sound in the WAV library by walking up from the build
@@ -563,6 +668,8 @@ IVertexBuffer? quadBuffer = null;
 ITexture2D? displayTexture = null;
 
 var frameCount = 0;
+
+var fireCooldown = 0.0;
 
 var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
@@ -793,9 +900,11 @@ void RenderFrame()
     // depth buffer decides occlusion, and texels alpha-test against
     // half coverage so transparent sprite margins stay clear. The
     // sprite stands on the floor line at 80% of the wall height
-    // there.
+    // there. Each enemy shows the frame its animation state selects
+    // (idle, hit flash, or a death frame); the dead render nothing.
 
     var orderedEnemies = enemies
+        .Where(enemy => enemy.State is not "Dead")
         .OrderByDescending(enemy =>
         {
             var enemyDX = enemy.X - positionX;
@@ -824,6 +933,15 @@ void RenderFrame()
         {
             continue;
         }
+
+        var sprite = enemy.State switch
+        {
+            "Damage" => enemyDamagePixels,
+
+            "Dying" => enemyDeathFrames[enemy.DeathFrame],
+
+            _ => enemyIdlePixels,
+        };
 
         var spriteScreenX = (int)
             ((width / 2.0) * (1.0 + transformX / transformY));
@@ -888,23 +1006,352 @@ void RenderFrame()
 
                 var texel = (texY * enemySpriteWidth + texX) * 4;
 
-                if (enemySpritePixels[texel + 3] < 128)
+                if (sprite[texel + 3] < 128)
                 {
                     continue;
                 }
 
                 var target = (row * width + stripe) * 4;
 
-                framebuffer[target + 0] = enemySpritePixels[texel + 0];
+                framebuffer[target + 0] = sprite[texel + 0];
 
-                framebuffer[target + 1] = enemySpritePixels[texel + 1];
+                framebuffer[target + 1] = sprite[texel + 1];
 
-                framebuffer[target + 2] = enemySpritePixels[texel + 2];
+                framebuffer[target + 2] = sprite[texel + 2];
 
                 framebuffer[target + 3] = byte.MaxValue;
             }
         }
     }
+
+    // Gun overlay: the pistol sprite rides bottom-center of the view,
+    // alpha-tested over everything else (no bobbing or muzzle flash
+    // yet).
+
+    var gunStripeHeight = (int)(height * 0.55);
+
+    var gunStripeWidth = (int)
+        (gunStripeHeight * (double)gunWidth / gunHeight);
+
+    var gunStartX = width / 2 - gunStripeWidth / 2;
+
+    var gunStartY = height - gunStripeHeight;
+
+    for (var stripe = Math.Max(0, gunStartX);
+        stripe < Math.Min(width, gunStartX + gunStripeWidth);
+        ++stripe)
+    {
+        var gunTexX = (int)
+            ((stripe - gunStartX) * gunWidth / (double)gunStripeWidth);
+
+        if (gunTexX < 0)
+        {
+            gunTexX = 0;
+        }
+        else if (gunTexX >= gunWidth)
+        {
+            gunTexX = gunWidth - 1;
+        }
+
+        for (var row = Math.Max(0, gunStartY); row < height; ++row)
+        {
+            var gunTexY = (int)
+                ((row - gunStartY) * gunHeight / (double)gunStripeHeight);
+
+            if (gunTexY < 0)
+            {
+                gunTexY = 0;
+            }
+            else if (gunTexY >= gunHeight)
+            {
+                gunTexY = gunHeight - 1;
+            }
+
+            var gunTexel = (gunTexY * gunWidth + gunTexX) * 4;
+
+            if (gunPixels[gunTexel + 3] < 128)
+            {
+                continue;
+            }
+
+            var gunTarget = (row * width + stripe) * 4;
+
+            framebuffer[gunTarget + 0] = gunPixels[gunTexel + 0];
+
+            framebuffer[gunTarget + 1] = gunPixels[gunTexel + 1];
+
+            framebuffer[gunTarget + 2] = gunPixels[gunTexel + 2];
+
+            framebuffer[gunTarget + 3] = byte.MaxValue;
+        }
+    }
+}
+
+// The nearest enemy still able to take damage (validation aid and the
+// future homing target for enemy AI).
+
+Enemy? NearestLivingEnemy()
+{
+    Enemy? nearest = null;
+
+    var nearestSquare = double.MaxValue;
+
+    foreach (var enemy in enemies)
+    {
+        if (enemy.State is "Dying" or "Dead")
+        {
+            continue;
+        }
+
+        var enemyDX = enemy.X - positionX;
+
+        var enemyDY = enemy.Y - positionY;
+
+        var square = enemyDX * enemyDX + enemyDY * enemyDY;
+
+        if (square < nearestSquare)
+        {
+            nearestSquare = square;
+
+            nearest = enemy;
+        }
+    }
+
+    return nearest;
+}
+
+// Aims the camera straight at an enemy: the direction turns toward it
+// and the camera plane stays its perpendicular half-FOV vector.
+
+void AimAt(Enemy target)
+{
+    var aimX = target.X - positionX;
+
+    var aimY = target.Y - positionY;
+
+    var aimLength = Math.Sqrt(aimX * aimX + aimY * aimY);
+
+    if (aimLength < 1e-6)
+    {
+        return;
+    }
+
+    directionX = aimX / aimLength;
+
+    directionY = aimY / aimLength;
+
+    planeX = -directionY * 0.66;
+
+    planeY = directionX * 0.66;
+}
+
+// Fires one hitscan shot: the gunshot sound plays at the listener,
+// the exact view-direction ray gives the wall distance (the DDA with
+// cameraX = 0), and the nearest living enemy inside its billboard
+// half-width and in front of the wall takes the damage — a hit flash
+// while hit points remain, the death sequence at zero.
+
+void FireWeapon(IWindow currentWindow)
+{
+    fireEmitter.Stop();
+
+    fireEmitter.Position = listener.Transform.Position;
+
+    fireEmitter.Play();
+
+    var wallDepth = WallDistance();
+
+    var inverseDet = 1.0 / (planeX * directionY - directionX * planeY);
+
+    Enemy? target = null;
+
+    var targetDepth = wallDepth;
+
+    foreach (var enemy in enemies)
+    {
+        if (enemy.State is "Dying" or "Dead")
+        {
+            continue;
+        }
+
+        var spriteX = enemy.X - positionX;
+
+        var spriteY = enemy.Y - positionY;
+
+        var transformY = inverseDet
+            * (-planeY * spriteX + planeX * spriteY);
+
+        var transformX = inverseDet
+            * (directionY * spriteX - directionX * spriteY);
+
+        if (transformY > 0.2
+            && transformY < targetDepth
+            && Math.Abs(transformX) < 0.4)
+        {
+            target = enemy;
+
+            targetDepth = transformY;
+        }
+    }
+
+    if (target is null)
+    {
+        return;
+    }
+
+    target.HitPoints--;
+
+    if (target.HitPoints > 0)
+    {
+        target.State = "Damage";
+
+        target.StateTimer = 0.0;
+
+        hitEmitter.Stop();
+
+        hitEmitter.Position = new Vector3(
+            (float)target.X,
+            0.0f,
+            (float)target.Y);
+
+        hitEmitter.Play();
+    }
+    else
+    {
+        target.State = "Dying";
+
+        target.StateTimer = 0.0;
+
+        target.DeathFrame = 0;
+
+        var remaining = enemies.Count(
+            enemy => enemy.State is not ("Dying" or "Dead"));
+
+        Console.WriteLine(
+            $"Enemy defeated; {remaining} remain"
+            + (remaining == 1 ? "s." : "."));
+    }
+}
+
+// Whether the aimed camera actually sees the enemy: the enemy must be
+// in front, inside its billboard half-width, and nearer than the wall
+// along the exact view direction.
+
+bool HasLineOfSight(Enemy enemy)
+{
+    var inverseDet = 1.0 / (planeX * directionY - directionX * planeY);
+
+    var spriteX = enemy.X - positionX;
+
+    var spriteY = enemy.Y - positionY;
+
+    var transformY = inverseDet
+        * (-planeY * spriteX + planeX * spriteY);
+
+    var transformX = inverseDet
+        * (directionY * spriteX - directionX * spriteY);
+
+    return transformY > 0.2
+        && Math.Abs(transformX) < 0.4
+        && transformY < WallDistance();
+}
+
+// The wall distance along the exact view direction: the same DDA walk
+// the wall pass runs, but for the single center ray.
+
+double WallDistance()
+{
+    var rayX = directionX;
+
+    var rayY = directionY;
+
+    var mapX = (int)positionX;
+
+    var mapY = (int)positionY;
+
+    var deltaX = rayX == 0 ? 1e30 : Math.Abs(1 / rayX);
+
+    var deltaY = rayY == 0 ? 1e30 : Math.Abs(1 / rayY);
+
+    int stepX;
+
+    int stepY;
+
+    double sideX;
+
+    double sideY;
+
+    if (rayX < 0)
+    {
+        stepX = -1;
+
+        sideX = (positionX - mapX) * deltaX;
+    }
+    else
+    {
+        stepX = 1;
+
+        sideX = (mapX + 1.0 - positionX) * deltaX;
+    }
+
+    if (rayY < 0)
+    {
+        stepY = -1;
+
+        sideY = (positionY - mapY) * deltaY;
+    }
+    else
+    {
+        stepY = 1;
+
+        sideY = (mapY + 1.0 - positionY) * deltaY;
+    }
+
+    var side = 0;
+
+    while (true)
+    {
+        if (sideX < sideY)
+        {
+            sideX += deltaX;
+
+            mapX += stepX;
+
+            side = 0;
+        }
+        else
+        {
+            sideY += deltaY;
+
+            mapY += stepY;
+
+            side = 1;
+        }
+
+        if (mapY < 0 || mapY >= mapRows
+            || mapX < 0 || mapX >= mapColumns)
+        {
+            throw new InvalidOperationException(
+                "A shot ray left the closed map; the border or spawn "
+                + "is invalid.");
+        }
+
+        if (map[mapY, mapX] is not (0 or 4))
+        {
+            break;
+        }
+    }
+
+    var perpendicular = side == 0
+        ? sideX - deltaX
+        : sideY - deltaY;
+
+    if (perpendicular < 0.1)
+    {
+        perpendicular = 0.1;
+    }
+
+    return perpendicular;
 }
 
 window.Run((currentWindow, deltaTime) =>
@@ -916,17 +1363,19 @@ window.Run((currentWindow, deltaTime) =>
             DisplayFragmentShaderSource);
 
         // Fullscreen quad on the fixed vertex layout (position,
-        // color, normal, uv).
+        // color, normal, uv). The v coordinate maps framebuffer
+        // row 0 to the screen top; the original mapping sampled row
+        // 0 at the bottom and displayed the whole view flipped.
 
         quadBuffer = currentWindow.Graphics.CreateVertexBuffer(
         [
             // position          color                 normal                uv
-            -1.0f,  1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-             1.0f,  1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
-             1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
-            -1.0f,  1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-             1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
-            -1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+            -1.0f,  1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+             1.0f,  1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
+             1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+            -1.0f,  1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+             1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+            -1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
         ]);
 
         currentWindow.Graphics.SetDepthTest(false);
@@ -983,22 +1432,6 @@ window.Run((currentWindow, deltaTime) =>
         turn += TurnSpeed * deltaTime;
     }
 
-    // The audio listener follows the camera every frame. The yaw maps
-    // the demo's map-space direction (x east, y south) into the audio
-    // world so left/right perception matches the view.
-
-    listener.Transform.Position = new Vector3(
-        (float)positionX,
-        0.0f,
-        (float)positionY);
-
-    listener.Transform.Rotation = Quaternion.CreateFromYawPitchRoll(
-        MathF.Atan2(-(float)directionX, -(float)directionY),
-        0f,
-        0f);
-
-    listener.Synchronize();
-
     if (turn != 0.0)
     {
         var cosine = Math.Cos(turn);
@@ -1012,6 +1445,132 @@ window.Run((currentWindow, deltaTime) =>
         (planeX, planeY) = (
             planeX * cosine - planeY * sine,
             planeX * sine + planeY * cosine);
+    }
+
+    // The audio listener follows the camera every frame, after
+    // movement and turning so it carries the fresh pose.
+
+    listener.Transform.Position = new Vector3(
+        (float)positionX,
+        0.0f,
+        (float)positionY);
+
+    listener.Transform.Rotation = Quaternion.CreateFromYawPitchRoll(
+        MathF.Atan2(-(float)directionX, -(float)directionY),
+        0f,
+        0f);
+
+    listener.Synchronize();
+
+    // Enemy animation states tick with the frame time: the hit flash
+    // returns to idle, the death sequence advances through its frames
+    // and silences the emitter on the final one. Defeating the last
+    // enemy is the win condition.
+
+    foreach (var enemy in enemies)
+    {
+        if (enemy.State == "Damage")
+        {
+            enemy.StateTimer += deltaTime;
+
+            if (enemy.StateTimer >= 0.25)
+            {
+                enemy.State = "Idle";
+            }
+        }
+        else if (enemy.State == "Dying")
+        {
+            enemy.StateTimer += deltaTime;
+
+            while (enemy.StateTimer >= 0.12
+                && enemy.DeathFrame < enemyDeathFrames.Length - 1)
+            {
+                enemy.StateTimer -= 0.12;
+
+                enemy.DeathFrame++;
+            }
+
+            if (enemy.DeathFrame == enemyDeathFrames.Length - 1
+                && enemy.StateTimer >= 0.12)
+            {
+                enemy.State = "Dead";
+
+                enemy.Emitter?.Stop();
+
+                if (enemies.All(defeated => defeated.State == "Dead"))
+                {
+                    Console.WriteLine("All enemies defeated — you win!");
+
+                    currentWindow.Close();
+                }
+            }
+        }
+    }
+
+    // Shooting: Space fires hitscan shots on a short cooldown;
+    // --autofire is the validation aid that aims at the nearest
+    // living enemy, walks toward it when a wall blocks the view, and
+    // fires once the line of sight is clear, so the combat loop and
+    // the win condition validate headlessly.
+
+    var autoFireReady = false;
+
+    if (autofire)
+    {
+        var autoTarget = NearestLivingEnemy();
+
+        if (autoTarget is not null)
+        {
+            AimAt(autoTarget);
+
+            if (HasLineOfSight(autoTarget))
+            {
+                autoFireReady = true;
+            }
+            else
+            {
+                // Walk toward the target with the same per-axis
+                // collision sliding the player uses; pillars slide
+                // past once the corridor opens.
+
+                var toX = autoTarget.X - positionX;
+
+                var toY = autoTarget.Y - positionY;
+
+                var toLength = Math.Sqrt(toX * toX + toY * toY);
+
+                if (toLength >= 1e-6)
+                {
+                    var walkStep = MoveSpeed * deltaTime;
+
+                    var stepX = toX / toLength * walkStep;
+
+                    if (Walkable(positionX + stepX, positionY))
+                    {
+                        positionX += stepX;
+                    }
+
+                    var stepY = toY / toLength * walkStep;
+
+                    if (Walkable(positionX, positionY + stepY))
+                    {
+                        positionY += stepY;
+                    }
+                }
+            }
+        }
+    }
+
+    fireCooldown -= deltaTime;
+
+    if ((autoFireReady
+            || (!autofire
+                && currentWindow.Input.Keyboard.IsKeyPressed(KeyCode.Space)))
+        && fireCooldown <= 0.0)
+    {
+        fireCooldown = 0.4;
+
+        FireWeapon(currentWindow);
     }
 
     RenderFrame();
@@ -1040,3 +1599,24 @@ window.Run((currentWindow, deltaTime) =>
         currentWindow.Close();
     }
 });
+
+// One enemy: map spawn position, hit points, animation state (Idle,
+// Damage hit flash, Dying through the death frames, Dead), and the
+// positional emitter carrying its idle sound.
+
+sealed class Enemy
+{
+    public required double X { get; init; }
+
+    public required double Y { get; init; }
+
+    public int HitPoints { get; set; } = 2;
+
+    public string State { get; set; } = "Idle";
+
+    public double StateTimer { get; set; }
+
+    public int DeathFrame { get; set; }
+
+    public SoundEmitter? Emitter { get; set; }
+}
