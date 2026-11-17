@@ -47,6 +47,8 @@ JOT.NET/
 ├── README.md                       # Main project documentation
 ├── assets/
 │   ├── HOG2/                       # Benchmark maps for pathfinding research
+│   ├── maps/                       # Plain-text grid maps (RayCastDemo)
+│   │   └── raycast01.map
 │   ├── models/                     # Wavefront OBJ (.obj) + glTF 2 (.gltf/.glb) library
 │   │   ├── glTF/
 │   │   ├── kenney_blaster-kit_2.1/
@@ -101,6 +103,9 @@ JOT.NET/
     ├── demos/
     │   ├── AudioDemo/
     │   │   ├── AudioDemo.csproj
+    │   │   └── Program.cs
+    │   ├── RayCastDemo/
+    │   │   ├── RayCastDemo.csproj
     │   │   └── Program.cs
     │   └── RayDemo/
     │       ├── RayDemo.csproj
@@ -470,29 +475,36 @@ RayCastDemo step sequence (planned; each step runtime-validated in
 RayCastDemo before the next; engine additions ride along in
 Core/Infrastructure only when the demo cannot proceed without them):
 
-- [ ] Step R1 - RayCastDemo (src/demos/RayCastDemo): Wolfenstein-style
+- [x] Step R1 - RayCastDemo (src/demos/RayCastDemo): Wolfenstein-style
       2.5D raycasting after lodev's tutorial
       (lodev.org/cgtutor/raycasting.html): per-column DDA walk of a
-      grid map with textured wall slices sampled on the CPU into an
-      RGBA framebuffer, displayed through the proven RayDemo path
-      (SilkWindow + fullscreen quad + per-frame texture upload); the
-      GL texture only carries finished frames, it is never sampled
-      for the wall texture lookups. Wall textures decode once at
-      startup from assets/textures/materials via the existing
-      StbImageLoader. The map loads from an asset file: a plain-text
-      grid under assets/maps/ where digits select wall types and
-      textures; missing or malformed maps fail loudly per the assets
-      rule. First milestone: map file + flat colored walls; second
-      milestone: textured walls. Movement and turning are keyboard
-      only for the first milestones (mouse look would require new
-      Infrastructure input glue and rides along later). Escape
-      closes; flags --width/--height/--frames/--seconds as in
-      RayDemo. Validation conclusion (2026-11-17): Core +
-      Infrastructure suffice — this demo and the one-level 2.5D FPS
-      demo below can be built now; later layers (Toolkits ECS and
-      Physics, Framework Scenes and Assets) would replace only the
-      demo's hand-rolled gameplay plumbing, never the raycasting
-      code itself, so nothing blocks building it ahead of Phase 3.
+      grid map with wall slices rendered into an RGBA framebuffer,
+      displayed through the proven RayDemo path (SilkWindow +
+      fullscreen quad + per-frame texture upload); the GL texture
+      only carries finished frames, it is never sampled for the wall
+      lookups. The map loads from an asset file: a plain-text grid
+      under assets/maps/raycast01.map where digits select wall types
+      (0 open, 1 border slate, 2 green pillar, 3 brick pillar);
+      missing or malformed maps fail loudly per the assets rule
+      (ragged widths, unknown digits, open borders, and maps without
+      open cells are load-time errors). First milestone delivered:
+      flat colored walls with y-side 70% shading for depth; textured
+      wall slices from assets/textures/materials via the existing
+      StbImageLoader are the next milestone. Movement and turning are
+      keyboard only for the first milestones — arrows walk and turn
+      with per-axis move tests giving wall sliding against the grid
+      (mouse look would require new Infrastructure input glue and
+      rides along later; the existing KeyCode enum carries no W/D, so
+      WASD would ride along with it). Escape closes; flags
+      --width/--height/--frames/--seconds. Validation conclusion
+      (2026-11-17): Core + Infrastructure suffice — this demo and the
+      one-level 2.5D FPS demo below can be built now; later layers
+      (Toolkits ECS and Physics, Framework Scenes and Assets) would
+      replace only the demo's hand-rolled gameplay plumbing, never
+      the raycasting code itself, so nothing blocks building it ahead
+      of Phase 3. Runtime-validated: build 0 errors; map loads from
+      the asset file (16x16 reported); ~55 fps at 480x320 (441 frames
+      in 8 s against the --seconds limit); clean close, exit 0.
 - [ ] Step R2 - 2.5D FPS demo (src/demos/RayCastDemo lineage):
       one playable level on the raycast renderer — grid collision,
       sprite entities with the per-column depth buffer, positional

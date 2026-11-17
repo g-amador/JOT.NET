@@ -1,4 +1,4 @@
-# Force GitHub Linguist to count C#, Razor, and Prolog files
+# Force GitHub Linguist to count C# and Razor files
 *.cs linguist-detectable=true
 *.razor linguist-detectable=true
 

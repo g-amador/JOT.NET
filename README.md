@@ -24,7 +24,7 @@ JOT.NET is currently **experimental and not production ready**. Current prioriti
 - Infrastructure layer implemented and runtime-validated
 - Core engine systems (Math, Rendering, Audio) implemented and runtime-validated
 - Next: Core Template validation, then the Toolkits layer
-- Planned: a Wolfenstein-style 2.5D raycasting FPS level demo (buildable on the completed Core + Infrastructure layers) and a full-stack 3D FPS level demo once all layers are complete
+- Planned: a Wolfenstein-style 2.5D raycasting FPS level demo (buildable on the completed Core + Infrastructure layers) and a full-stack 3D FPS level demo once all layers are complete; later Toolkits/Framework features (ECS, Physics, Scenes, Assets) will migrate the demos' hand-rolled gameplay plumbing without redesigning their renderers
 - Networking architecture prepared for later MMO support
 
 ---
@@ -246,6 +246,12 @@ Path Tracing (RayDemo) — runtime-validated:
 - [ ] Tracing runs on dedicated big-stack threads striped over all logical cores, one pass at a time (passes advance ~2.8 s at 480x320).
 - [ ] The image renders live in an engine window; no disk output; Escape closes it, and it auto-closes at the pass budget.
 - [ ] `dotnet run --project src/demos/RayDemo` flags: `--width/--height/--samples/--frames/--seconds`.
+
+Raycasting (RayCastDemo) — runtime-validated:
+- [ ] Wolfenstein-style 2.5D raycasting (per-column DDA walk, flat colored y-side-shaded wall slices; textured walls are the next milestone).
+- [ ] The map loads from the plain-text asset file assets/maps/raycast01.map (digits select wall types; malformed maps fail loudly).
+- [ ] Keyboard movement and turning with per-axis wall sliding; Escape closes it, or --frames/--seconds limits.
+- [ ] `dotnet run --project src/demos/RayCastDemo` flags: `--width/--height/--frames/--seconds`.
 
 [Back to Table of Contents](#toc)
 

@@ -8,6 +8,8 @@ JOT.NET/
 ├── README.md                       # Main project documentation
 ├── assets/
 │   ├── HOG2/                       # Benchmark maps for pathfinding research
+│   ├── maps/                       # Plain-text grid maps (RayCastDemo)
+│   │   └── raycast01.map
 │   ├── models/                     # Wavefront OBJ (.obj) + glTF 2 (.gltf/.glb) library
 │   │   ├── glTF/
 │   │   ├── kenney_blaster-kit_2.1/
@@ -62,6 +64,9 @@ JOT.NET/
     ├── demos/
     │   ├── AudioDemo/
     │   │   ├── AudioDemo.csproj
+    │   │   └── Program.cs
+    │   ├── RayCastDemo/
+    │   │   ├── RayCastDemo.csproj
     │   │   └── Program.cs
     │   └── RayDemo/
     │       ├── RayDemo.csproj

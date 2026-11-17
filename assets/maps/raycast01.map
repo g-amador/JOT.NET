@@ -1,0 +1,28 @@
+# JOT.NET RayCastDemo map 01: a plain-text grid read by the demo.
+# Full-line comments (#) and blank lines are ignored. Every other
+# line must carry the same number of digits, where:
+#
+#   0 - open cell (walkable, rays pass through)
+#   1 - border wall (slate; every border cell must be a wall)
+#   2 - pillar wall (green)
+#   3 - pillar wall (brick red)
+#
+# The demo fails loudly on malformed rows, unknown digits, ragged
+# widths, or an open border: fix the file, do not guess.
+
+1111111111111111
+1000000000000001
+1000000000000001
+1002000000002001
+1003000000003001
+1000000000000001
+1000000000000001
+1000020002000001
+1000030003000001
+1000000000000001
+1000000000000001
+1002000000002001
+1003000000003001
+1000000000000001
+1000000000000001
+1111111111111111
