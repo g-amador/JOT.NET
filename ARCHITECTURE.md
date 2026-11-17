@@ -8,6 +8,7 @@ JOT.NET/
 ├── README.md                       # Main project documentation
 ├── assets/
 │   ├── HOG2/                       # Benchmark maps for pathfinding research
+│   ├── 2dot5D/                      # 2.5D FPS sprites (enemy animation frames, gun sprites)
 │   ├── maps/                       # Plain-text grid maps (RayCastDemo)
 │   │   └── raycast01.map
 │   ├── models/                     # Wavefront OBJ (.obj) + glTF 2 (.gltf/.glb) library

@@ -2,13 +2,15 @@
 // tutorial (lodev.org/cgtutor/raycasting.html). For every screen
 // column one ray walks the grid map with DDA steps until it hits a
 // wall cell; the slice height comes from the perpendicular distance
-// and the column is drawn as a flat colored stripe (the first
-// milestone — textured wall slices follow). Y-side hits shade to 70%
-// so depth still reads without textures, as in the tutorial.
+// and the column is drawn as a textured stripe: every wall digit
+// samples its own texture from assets/textures/materials (decoded
+// once at startup through the StbImageLoader). Y-side hits shade to
+// 70% so depth still reads, as in the tutorial.
 //
 // The map loads from an asset file (assets/maps/raycast01.map, a
 // plain-text grid) and fails loudly on malformed rows, unknown
-// digits, ragged widths, an open border, or a map without open cells.
+// digits, ragged widths, an open border, or a map without open
+// cells; wall textures fail loudly on missing or malformed files.
 //
 // Movement and turning are keyboard-only for the first milestones
 // (mouse look would require new Infrastructure input glue and rides
@@ -24,6 +26,7 @@
 // after --seconds; a one-level 2.5D FPS demo builds on this demo in a
 // later step (R2).
 
+using JOT.Infrastructure.Assimp.Importing;
 using JOT.Infrastructure.Silk.Graphics;
 using JOT.Infrastructure.Silk.Input;
 using JOT.Infrastructure.Silk.Windowing;
@@ -80,6 +83,68 @@ var mapColumns = map.GetLength(1);
 
 Console.WriteLine(
     $"Map: {mapColumns}x{mapRows} cells ({Path.GetFileName(mapPath)}).");
+
+// Wall textures: every wall digit decodes exactly one texture file at
+// startup through the StbImageLoader (RGBA byte rows, any
+// dimensions); sampling stays on the CPU, the GL texture only
+// carries finished frames. Missing files fail loudly.
+
+var imageLoader = new StbImageLoader();
+
+var wallTextureFiles = new Dictionary<int, string>
+{
+    [1] = "cement.jpg",
+    [2] = "dalbeton.jpg",
+    [3] = "brick0.jpg",
+};
+
+// Every wall digit present in the map must have a texture assigned;
+// fail loudly at startup instead of sampling a null texture later.
+
+for (var row = 0; row < mapRows; ++row)
+{
+    for (var column = 0; column < mapColumns; ++column)
+    {
+        var wallDigit = map[row, column];
+
+        if (wallDigit != 0 && !wallTextureFiles.ContainsKey(wallDigit))
+        {
+            throw new InvalidOperationException(
+                $"No wall texture is assigned for wall type {wallDigit}.");
+        }
+    }
+}
+
+var textureCount = wallTextureFiles.Keys.Max() + 1;
+
+var texturePixels = new byte[textureCount][];
+
+var textureWidths = new int[textureCount];
+
+var textureHeights = new int[textureCount];
+
+foreach (var wallTexture in wallTextureFiles)
+{
+    var image = imageLoader.Load(FindTexturePath(wallTexture.Value));
+
+    if (image.Pixels.Length != image.Width * image.Height * 4)
+    {
+        throw new InvalidOperationException(
+            $"{image.SourcePath}: expected RGBA pixels "
+            + $"({image.Width}x{image.Height}x4), got "
+            + $"{image.Pixels.Length}.");
+    }
+
+    texturePixels[wallTexture.Key] = image.Pixels;
+
+    textureWidths[wallTexture.Key] = image.Width;
+
+    textureHeights[wallTexture.Key] = image.Height;
+
+    Console.WriteLine(
+        $"Wall texture {wallTexture.Key}: {wallTexture.Value} "
+        + $"{image.Width}x{image.Height}.");
+}
 
 // Spawn at the center of the first open cell, facing east. The camera
 // plane is perpendicular to the direction; its length sets the field
@@ -154,21 +219,6 @@ bool Walkable(double x, double y)
         && Open(x + CollisionRadius, y + CollisionRadius);
 }
 
-// Flat wall colors per wall type (the digits documented in the map
-// asset); the loader rejects anything outside this set.
-
-static (byte Red, byte Green, byte Blue) WallColor(int type)
-{
-    return type switch
-    {
-        1 => (96, 106, 128),
-        2 => (70, 160, 96),
-        3 => (168, 84, 72),
-        _ => throw new InvalidOperationException(
-            $"No wall color is defined for wall type {type}."),
-    };
-}
-
 static string FindMapPath()
 {
     var directory = new DirectoryInfo(AppContext.BaseDirectory);
@@ -192,6 +242,36 @@ static string FindMapPath()
     throw new InvalidOperationException(
         "Could not find the assets/maps folder relative to the build "
         + "output.");
+}
+
+// Locates a wall texture in the materials library by walking up from
+// the build output (the convention shared with the map asset).
+
+static string FindTexturePath(string fileName)
+{
+    var directory = new DirectoryInfo(AppContext.BaseDirectory);
+
+    while (directory is not null)
+    {
+        var candidate = Path.Combine(
+            directory.FullName,
+            "assets",
+            "textures",
+            "materials",
+            fileName);
+
+        if (File.Exists(candidate))
+        {
+            return candidate;
+        }
+
+        directory = directory.Parent;
+    }
+
+    throw new FileNotFoundException(
+        "Could not find assets/textures/materials/"
+        + fileName
+        + " relative to the build output.");
 }
 
 // Parses the map grid: full-line comments and blank lines are
@@ -447,16 +527,47 @@ void RenderFrame()
 
         var drawEnd = Math.Min(height, height / 2 + lineHeight / 2);
 
-        var (red, green, blue) = WallColor(wallType);
+        // Horizontal texture coordinate from the fractional wall hit
+        // position (the tutorial's formulation); the two sides that
+        // would see the texture mirrored have their coordinate
+        // flipped.
 
-        if (side == 1)
+        var wallHit = side == 0
+            ? positionY + perpendicular * rayY
+            : positionX + perpendicular * rayX;
+
+        wallHit -= Math.Floor(wallHit);
+
+        var texWidth = textureWidths[wallType];
+
+        var texHeight = textureHeights[wallType];
+
+        var texture = texturePixels[wallType];
+
+        var texX = (int)(wallHit * texWidth);
+
+        if ((side == 0 && rayX > 0) || (side == 1 && rayY < 0))
         {
-            red = (byte)(red * 7 / 10);
-
-            green = (byte)(green * 7 / 10);
-
-            blue = (byte)(blue * 7 / 10);
+            texX = texWidth - texX - 1;
         }
+
+        if (texX < 0)
+        {
+            texX = 0;
+        }
+        else if (texX >= texWidth)
+        {
+            texX = texWidth - 1;
+        }
+
+        // The vertical coordinate walks the texture in lockstep with
+        // the drawn stripe, offset so clipped stripes stay aligned;
+        // the clamp tolerates any texture height, not just powers of
+        // two.
+
+        var texStep = (double)texHeight / lineHeight;
+
+        var texPos = (drawStart - height / 2.0 + lineHeight / 2.0) * texStep;
 
         var pixel = drawStart * width + column;
 
@@ -464,9 +575,38 @@ void RenderFrame()
 
         while (pixel < end)
         {
-            framebuffer[pixel * 4 + 0] = red;
-            framebuffer[pixel * 4 + 1] = green;
-            framebuffer[pixel * 4 + 2] = blue;
+            var texY = (int)texPos;
+
+            if (texY < 0)
+            {
+                texY = 0;
+            }
+            else if (texY >= texHeight)
+            {
+                texY = texHeight - 1;
+            }
+
+            texPos += texStep;
+
+            var texel = (texY * texWidth + texX) * 4;
+
+            if (side == 1)
+            {
+                framebuffer[pixel * 4 + 0] = (byte)(texture[texel] * 7 / 10);
+
+                framebuffer[pixel * 4 + 1] = (byte)(texture[texel + 1] * 7 / 10);
+
+                framebuffer[pixel * 4 + 2] = (byte)(texture[texel + 2] * 7 / 10);
+            }
+            else
+            {
+                framebuffer[pixel * 4 + 0] = texture[texel];
+
+                framebuffer[pixel * 4 + 1] = texture[texel + 1];
+
+                framebuffer[pixel * 4 + 2] = texture[texel + 2];
+            }
+
             framebuffer[pixel * 4 + 3] = byte.MaxValue;
 
             pixel += width;

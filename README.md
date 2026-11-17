@@ -24,7 +24,7 @@ JOT.NET is currently **experimental and not production ready**. Current prioriti
 - Infrastructure layer implemented and runtime-validated
 - Core engine systems (Math, Rendering, Audio) implemented and runtime-validated
 - Next: Core Template validation, then the Toolkits layer
-- Planned: a Wolfenstein-style 2.5D raycasting FPS level demo (buildable on the completed Core + Infrastructure layers) and a full-stack 3D FPS level demo once all layers are complete; later Toolkits/Framework features (ECS, Physics, Scenes, Assets) will migrate the demos' hand-rolled gameplay plumbing without redesigning their renderers
+- Planned: a Wolfenstein-style 2.5D raycasting FPS level demo (buildable on the completed Core + Infrastructure layers; enemy and gun sprite art is already in the asset library under `assets/2dot5D/`) and a full-stack 3D FPS level demo once all layers are complete; later Toolkits/Framework features (ECS, Physics, Scenes, Assets) will migrate the demos' hand-rolled gameplay plumbing without redesigning their renderers. RayDemo is also planned to gain a terminal-first interactive render setup: the terminal asks whether to render the default scene (spheres, pyramid, cone, and cube) or a model chosen from `assets/models/`, then the parameters — resolution as five standard choices with a time estimate per choice — and the window shows the finished image only after all passes complete.
 - Networking architecture prepared for later MMO support
 
 ---
@@ -248,7 +248,7 @@ Path Tracing (RayDemo) — runtime-validated:
 - [ ] `dotnet run --project src/demos/RayDemo` flags: `--width/--height/--samples/--frames/--seconds`.
 
 Raycasting (RayCastDemo) — runtime-validated:
-- [ ] Wolfenstein-style 2.5D raycasting (per-column DDA walk, flat colored y-side-shaded wall slices; textured walls are the next milestone).
+- [ ] Wolfenstein-style 2.5D raycasting (per-column DDA walk, textured y-side-shaded wall slices — cement, concrete, brick — with flat colors retired).
 - [ ] The map loads from the plain-text asset file assets/maps/raycast01.map (digits select wall types; malformed maps fail loudly).
 - [ ] Keyboard movement and turning with per-axis wall sliding; Escape closes it, or --frames/--seconds limits.
 - [ ] `dotnet run --project src/demos/RayCastDemo` flags: `--width/--height/--frames/--seconds`.

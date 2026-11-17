@@ -470,6 +470,22 @@ before the next; engine additions ride along in Core/Infrastructure):
       Capture-verified: glyphs render correctly over the translucent
       bar at the bottom-left.
 - [ ] Step 8 - Core Template closure (checklist confirmation)
+- [ ] Step 9 - RayDemo interactive render setup (deferred; starts
+      after Step 8): move RayDemo's scene and parameter selection
+      into the terminal before any window opens — the render screen
+      appears only once everything is done and all passes are
+      complete. The terminal asks, in order: (1) whether to render
+      the default scene (spheres, pyramid, cone, and cube in the
+      scene) or to choose what to load for rendering from the models
+      in assets/models; (2) all relevant parameters, with resolution
+      offered as a choice of five standard resolutions and a time
+      estimate shown per choice (derived from the measured per-pass
+      cost scaled by pixel count and sample count), alongside the
+      other existing parameters (samples per subpixel, pass budget).
+      The rendered result is displayed on screen only at the end,
+      once all passes complete — no progressive preview in this
+      interactive mode. Smallest validating implementation per the
+      standing rules; nothing is scaffolded until this step starts.
 
 RayCastDemo step sequence (planned; each step runtime-validated in
 RayCastDemo before the next; engine additions ride along in
@@ -505,10 +521,33 @@ Core/Infrastructure only when the demo cannot proceed without them):
       of Phase 3. Runtime-validated: build 0 errors; map loads from
       the asset file (16x16 reported); ~55 fps at 480x320 (441 frames
       in 8 s against the --seconds limit); clean close, exit 0.
+- [x] Step R1b - Textured wall slices: every wall digit samples its
+      own texture from assets/textures/materials, decoded once at
+      startup through the existing StbImageLoader (RGBA rows, any
+      dimensions): 1 cement.jpg, 2 dalbeton.jpg, 3 brick0.jpg; the
+      flat colors are retired. Texture coordinates follow the
+      tutorial's formulation — horizontal from the fractional wall
+      hit position (flipped on the two sides that would see it
+      mirrored), vertical walked in lockstep with the drawn stripe so
+      clipped stripes stay aligned; clamps tolerate any texture
+      height, not just powers of two. Wall digits without an assigned
+      texture fail loudly at startup; missing or malformed texture
+      files fail loudly per the assets rule. The demo now references
+      JOT.Infrastructure.Assimp for the StbImageLoader (its only use;
+      the GL texture still never samples walls). Runtime-validated:
+      build 0 errors; all three textures decode and load (1024x1024,
+      512x512, 1024x1024 reported); ~57 fps at 480x320 (453 frames in
+      8 s, no regression against the flat-colored build); clean
+      close, exit 0.
 - [ ] Step R2 - 2.5D FPS demo (src/demos/RayCastDemo lineage):
       one playable level on the raycast renderer — grid collision,
       sprite entities with the per-column depth buffer, positional
       sounds from the existing audio glue, and a win/exit condition.
+      Sprite art is already available in the asset library:
+      assets/2dot5D/Enemy Characters and Animations (Commando,
+      Flyguy, and Slayer frames for attack, damage, death, idle, and
+      walk) and assets/2dot5D/Gun Sprites; they decode through the
+      StbImageLoader like the wall textures.
       Built on the completed Core + Infrastructure layers; later
       Toolkits/Framework features may take over its plumbing, but no
       feature of it waits on them.
