@@ -12,6 +12,12 @@
 // digits, ragged widths, an open border, or a map without open
 // cells; wall textures fail loudly on missing or malformed files.
 //
+// Digit 4 marks enemy spawn cells: open for movement and rays, with
+// one enemy sprite placed at the cell's center. Enemies render as
+// camera-plane transformed billboards sorted back to front, with the
+// wall pass's per-column depth buffer deciding occlusion and an
+// alpha test keeping transparent sprite margins clear.
+//
 // Movement and turning are keyboard-only for the first milestones
 // (mouse look would require new Infrastructure input glue and rides
 // along later): the arrows walk and turn, with per-axis move tests
@@ -98,8 +104,9 @@ var wallTextureFiles = new Dictionary<int, string>
     [3] = "brick0.jpg",
 };
 
-// Every wall digit present in the map must have a texture assigned;
-// fail loudly at startup instead of sampling a null texture later.
+// Every wall digit present in the map must have a texture assigned
+// (digit 4 is an enemy spawn, not a wall); fail loudly at startup
+// instead of sampling a null texture later.
 
 for (var row = 0; row < mapRows; ++row)
 {
@@ -107,7 +114,7 @@ for (var row = 0; row < mapRows; ++row)
     {
         var wallDigit = map[row, column];
 
-        if (wallDigit != 0 && !wallTextureFiles.ContainsKey(wallDigit))
+        if (wallDigit is not (0 or 4) && !wallTextureFiles.ContainsKey(wallDigit))
         {
             throw new InvalidOperationException(
                 $"No wall texture is assigned for wall type {wallDigit}.");
@@ -145,6 +152,50 @@ foreach (var wallTexture in wallTextureFiles)
         $"Wall texture {wallTexture.Key}: {wallTexture.Value} "
         + $"{image.Width}x{image.Height}.");
 }
+
+// Enemy spawns: digit 4 cells are open, and each contributes one
+// enemy at its center.
+
+var enemies = new List<(double X, double Y)>();
+
+for (var row = 0; row < mapRows; ++row)
+{
+    for (var column = 0; column < mapColumns; ++column)
+    {
+        if (map[row, column] == 4)
+        {
+            enemies.Add((column + .5, row + .5));
+        }
+    }
+}
+
+Console.WriteLine($"Enemies: {enemies.Count}.");
+
+// Enemy sprite frames decode like the wall textures; the idle frame
+// is the first milestone, walk/attack/death frames follow with the
+// enemy behaviors.
+
+var enemySpriteImage = imageLoader.Load(
+    FindSpritePath("CommandoIdle.png"));
+
+if (enemySpriteImage.Pixels.Length
+    != enemySpriteImage.Width * enemySpriteImage.Height * 4)
+{
+    throw new InvalidOperationException(
+        $"{enemySpriteImage.SourcePath}: expected RGBA pixels "
+        + $"({enemySpriteImage.Width}x{enemySpriteImage.Height}x4), got "
+        + $"{enemySpriteImage.Pixels.Length}.");
+}
+
+var enemySpritePixels = enemySpriteImage.Pixels;
+
+var enemySpriteWidth = enemySpriteImage.Width;
+
+var enemySpriteHeight = enemySpriteImage.Height;
+
+Console.WriteLine(
+    $"Enemy sprite: CommandoIdle.png "
+    + $"{enemySpriteWidth}x{enemySpriteHeight}.");
 
 // Spawn at the center of the first open cell, facing east. The camera
 // plane is perpendicular to the direction; its length sets the field
@@ -205,7 +256,9 @@ bool Open(double x, double y)
         return false;
     }
 
-    return map[row, column] == 0;
+    // Digit 4 (enemy spawn) is an open cell too.
+
+    return map[row, column] is 0 or 4;
 }
 
 // Walkability of a position: the four corners of the collision box
@@ -274,6 +327,37 @@ static string FindTexturePath(string fileName)
         + " relative to the build output.");
 }
 
+// Locates an enemy sprite frame in the 2dot5D sprite library by
+// walking up from the build output (the convention shared with the
+// map asset and wall textures).
+
+static string FindSpritePath(string fileName)
+{
+    var directory = new DirectoryInfo(AppContext.BaseDirectory);
+
+    while (directory is not null)
+    {
+        var candidate = Path.Combine(
+            directory.FullName,
+            "assets",
+            "2dot5D",
+            "Enemy Characters and Animations",
+            fileName);
+
+        if (File.Exists(candidate))
+        {
+            return candidate;
+        }
+
+        directory = directory.Parent;
+    }
+
+    throw new FileNotFoundException(
+        "Could not find assets/2dot5D/Enemy Characters and Animations/"
+        + fileName
+        + " relative to the build output.");
+}
+
 // Parses the map grid: full-line comments and blank lines are
 // skipped; every other line must be the same width of digits 0-3;
 // the border must be closed.
@@ -321,11 +405,12 @@ static int[,] LoadMap(string path)
         {
             var character = line[column];
 
-            if (character is < '0' or > '3')
+            if (character is < '0' or > '4')
             {
                 throw new InvalidOperationException(
                     $"{path}: line {row + 1}, column {column + 1}: "
-                    + $"'{character}' is not a wall digit 0-3.");
+                    + $"'{character}' is not a map digit 0-4 "
+                    + "(0-3 walls, 4 enemy spawn).");
             }
 
             var border = row == 0 || row == lines.Count - 1
@@ -348,6 +433,11 @@ static int[,] LoadMap(string path)
 // The CPU-side RGBA framebuffer; every display pass rewrites it fully.
 
 var framebuffer = new byte[width * height * 4];
+
+// Per-column wall distance, written by the wall pass and read by the
+// sprite pass for occlusion.
+
+var depthBuffer = new double[width];
 
 var window = new SilkWindow(
     "JOT.NET RayCastDemo — 2.5D raycasting",
@@ -504,7 +594,10 @@ void RenderFrame()
                     + "invalid.");
             }
 
-            if (map[mapY, mapX] > 0)
+            // Digit 4 is an enemy spawn — an open cell, not a wall;
+            // rays pass through it like digit 0.
+
+            if (map[mapY, mapX] is not (0 or 4))
             {
                 hit = true;
 
@@ -520,6 +613,8 @@ void RenderFrame()
         {
             perpendicular = 1e-6;
         }
+
+        depthBuffer[column] = perpendicular;
 
         var lineHeight = (int)(height / perpendicular);
 
@@ -610,6 +705,125 @@ void RenderFrame()
             framebuffer[pixel * 4 + 3] = byte.MaxValue;
 
             pixel += width;
+        }
+    }
+
+    // Sprites: enemies render as camera-plane transformed billboards
+    // (the tutorial's formulation), sorted back to front so
+    // overlapping enemies paint correctly; the wall pass's per-column
+    // depth buffer decides occlusion, and texels alpha-test against
+    // half coverage so transparent sprite margins stay clear. The
+    // sprite stands on the floor line at 80% of the wall height
+    // there.
+
+    var orderedEnemies = enemies
+        .OrderByDescending(enemy =>
+        {
+            var enemyDX = enemy.X - positionX;
+
+            var enemyDY = enemy.Y - positionY;
+
+            return enemyDX * enemyDX + enemyDY * enemyDY;
+        })
+        .ToList();
+
+    var inverseDet = 1.0 / (planeX * directionY - directionX * planeY);
+
+    foreach (var enemy in orderedEnemies)
+    {
+        var spriteX = enemy.X - positionX;
+
+        var spriteY = enemy.Y - positionY;
+
+        var transformX = inverseDet
+            * (directionY * spriteX - directionX * spriteY);
+
+        var transformY = inverseDet
+            * (-planeY * spriteX + planeX * spriteY);
+
+        if (transformY <= 0.05)
+        {
+            continue;
+        }
+
+        var spriteScreenX = (int)
+            ((width / 2.0) * (1.0 + transformX / transformY));
+
+        var wallHeight = height / transformY;
+
+        var spriteStripeHeight = (int)(wallHeight * 0.8);
+
+        var spriteStripeWidth = spriteStripeHeight;
+
+        var drawStartY = (int)(height / 2.0 + wallHeight / 2.0)
+            - spriteStripeHeight;
+
+        var drawEndY = (int)(height / 2.0 + wallHeight / 2.0);
+
+        var drawStartX = spriteScreenX - spriteStripeWidth / 2;
+
+        var drawEndX = spriteScreenX + spriteStripeWidth / 2;
+
+        var stripeStart = Math.Max(0, drawStartX);
+
+        var stripeEnd = Math.Min(width, drawEndX);
+
+        var rowStart = Math.Max(0, drawStartY);
+
+        var rowEnd = Math.Min(height, drawEndY);
+
+        for (var stripe = stripeStart; stripe < stripeEnd; ++stripe)
+        {
+            if (transformY >= depthBuffer[stripe])
+            {
+                continue;
+            }
+
+            var texX = (int)
+                ((stripe - drawStartX) * enemySpriteWidth
+                    / (double)spriteStripeWidth);
+
+            if (texX < 0)
+            {
+                texX = 0;
+            }
+            else if (texX >= enemySpriteWidth)
+            {
+                texX = enemySpriteWidth - 1;
+            }
+
+            for (var row = rowStart; row < rowEnd; ++row)
+            {
+                var texY = (int)
+                    ((row - drawStartY) * enemySpriteHeight
+                        / (double)spriteStripeHeight);
+
+                if (texY < 0)
+                {
+                    texY = 0;
+                }
+                else if (texY >= enemySpriteHeight)
+                {
+                    texY = enemySpriteHeight - 1;
+                }
+
+                var texel = (texY * enemySpriteWidth + texX) * 4;
+
+                if (enemySpritePixels[texel + 3] < 128)
+                {
+                    continue;
+                }
+
+                var target = (row * width + stripe) * 4;
+
+                framebuffer[target + 0] = enemySpritePixels[texel + 0];
+
+                framebuffer[target + 1] = enemySpritePixels[texel + 1];
+
+                framebuffer[target + 2] = enemySpritePixels[texel + 2];
+
+                framebuffer[target + 3] = byte.MaxValue;
+            }
         }
     }
 }

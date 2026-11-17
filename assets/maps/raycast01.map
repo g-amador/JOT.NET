@@ -6,6 +6,8 @@
 #   1 - border wall (every border cell must be a wall)
 #   2 - pillar wall
 #   3 - pillar wall
+#   4 - enemy spawn (open cell; the demo places an enemy at the
+#       cell's center)
 #
 # The demo assigns each wall digit its own texture from
 # assets/textures/materials; digits without an assigned texture fail
@@ -15,18 +17,18 @@
 # widths, or an open border: fix the file, do not guess.
 
 1111111111111111
-1000000000000001
+1000000040000001
 1000000000000001
 1002000000002001
-1003000000003001
+1003000000400001
 1000000000000001
 1000000000000001
 1000020002000001
 1000030003000001
-1000000000000001
+1004000000000001
 1000000000000001
 1002000000002001
-1003000000003001
+1003000040003001
 1000000000000001
 1000000000000001
 1111111111111111

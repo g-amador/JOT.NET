@@ -539,18 +539,35 @@ Core/Infrastructure only when the demo cannot proceed without them):
       512x512, 1024x1024 reported); ~57 fps at 480x320 (453 frames in
       8 s, no regression against the flat-colored build); clean
       close, exit 0.
-- [ ] Step R2 - 2.5D FPS demo (src/demos/RayCastDemo lineage):
-      one playable level on the raycast renderer — grid collision,
-      sprite entities with the per-column depth buffer, positional
-      sounds from the existing audio glue, and a win/exit condition.
-      Sprite art is already available in the asset library:
+- [x] Step R2a - Sprite entities (src/demos/RayCastDemo): the map
+      gains digit 4 — an enemy-spawn cell that is open for movement
+      and rays (both the DDA hit test and the collision test treat it
+      like digit 0; the first run crashed exactly there until fixed —
+      honest note). Enemies render as camera-plane transformed
+      billboards (the tutorial's formulation) sorted back to front,
+      occluded by the wall pass's per-column depth buffer, standing
+      on the floor line at 80% of the wall height there, texels
+      alpha-tested at half coverage so transparent sprite margins
+      stay clear. The idle frame (CommandoIdle.png, 64x64) decodes
+      through the StbImageLoader like the wall textures;
+      walk/attack/death frames follow with the enemy behaviors.
+      raycast01.map carries four spawns. Runtime-validated: build
+      0 errors; 4 enemies load; ~57 fps at 480x320 (459 frames in
+      8 s, no regression); clean close, exit 0.
+- [ ] Step R2b - Positional sounds: enemy and weapon sounds through
+      the existing audio glue (as in AudioDemo), so nearby enemies
+      are heard from their positions.
+- [ ] Step R2c - Gun shooting and win/exit condition: a gun sprite
+      overlay from assets/2dot5D/Gun Sprites, hitscan shooting
+      against enemies (ray vs sprite cells), damage/death animation
+      frames, and the level's win/exit condition. Enemy and gun
+      sprite art is already available in the asset library:
       assets/2dot5D/Enemy Characters and Animations (Commando,
       Flyguy, and Slayer frames for attack, damage, death, idle, and
       walk) and assets/2dot5D/Gun Sprites; they decode through the
-      StbImageLoader like the wall textures.
-      Built on the completed Core + Infrastructure layers; later
-      Toolkits/Framework features may take over its plumbing, but no
-      feature of it waits on them.
+      StbImageLoader like the wall textures. Built on the completed
+      Core + Infrastructure layers; later Toolkits/Framework features
+      may take over its plumbing, but no feature of it waits on them.
 
 # PLANNED FOLLOW-UPS (NOT STARTED)
 
