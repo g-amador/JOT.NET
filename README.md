@@ -249,12 +249,14 @@ Path Tracing (RayDemo) — runtime-validated:
 
 Raycasting (RayCastDemo) - runtime-validated:
 - [ ] Wolfenstein-style 2.5D raycasting (per-column DDA walk, textured y-side-shaded wall slices - cement, concrete, brick - with flat colors retired).
-- [ ] Enemy sprites render as depth-buffered billboards from map digit 4 spawns, with idle, hit-flash, and death animation frames.
-- [ ] Hitscan combat: Space fires shots (pistol overlay bottom-center, gunshot and hit-grunt sounds); defeating every enemy is the win and closes the window. Enemies do not fight back yet.
+- [ ] Enemy sprites render as depth-buffered billboards from map digit 4 spawns; walking, attacking, hit-flash, and death animation frames all render.
+- [ ] Enemies chase the player from spawn on their walk frames and attack in range (10 damage per attack cycle against the player's 100 HP); the health bar tracks the remainder and "You died." closes the window at zero.
+- [ ] Hitscan combat: Space fires shots (gunshot and hit-grunt sounds); defeating every enemy is the win and closes the window.
+- [ ] Three weapons switch with 1 (pistol), 2 (machine gun) and 3 (shotgun), each with its own fire-frame sheet (chroma-keyed and sliced from content rectangles), cooldown and damage.
 - [ ] Positional audio: one looping emitter per enemy heard from its position, with the listener following the camera.
 - [ ] The map loads from the plain-text asset file assets/maps/raycast01.map (digits select wall types; malformed maps fail loudly).
 - [ ] Keyboard movement and turning with per-axis wall sliding; Escape closes it, or --frames/--seconds limits.
-- [ ] `dotnet run --project src/demos/RayCastDemo` flags: `--width/--height/--frames/--seconds` (plus `--autofire`, a headless validation aid for the combat loop).
+- [ ] `dotnet run --project src/demos/RayCastDemo` flags: `--width/--height/--frames/--seconds` (plus `--autofire` and `--weapon 0|1|2`, headless validation aids for the combat loop and the weapon sheets).
 
 [Back to Table of Contents](#toc)
 

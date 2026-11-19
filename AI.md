@@ -570,9 +570,6 @@ Core/Infrastructure only when the demo cannot proceed without them):
       looping emitters report (44100 Hz, 2 channels); ~57 fps at
       480x320 (455 frames in 8 s, no regression); clean close,
       exit 0.
-- [ ] Step R2b - Positional sounds: enemy and weapon sounds through
-      the existing audio glue (as in AudioDemo), so nearby enemies
-      are heard from their positions.
 - [x] Step R2c - Gun shooting, win/exit condition, and the display
       orientation fix: Space fires hitscan shots on a short cooldown —
       a DDA along the exact view direction gives the wall distance,
@@ -604,7 +601,44 @@ Core/Infrastructure only when the demo cannot proceed without them):
       normal run ~57 fps at 480x320 (452 frames in 8 s); --autofire
       run: four "Enemy defeated" reports, the win message, clean
       close, exit 0. Enemies still never fight back — attack frames
-      and enemies damaging the player remain future work.
+      and enemies damaging the player remain future work (superseded
+      by Step R2d below).
+- [x] Step R2d - Weapon switching, gun fire animations, enemy chase
+      and attacks: KeyCode gains Number1/Number2/Number3 (the Silk
+      adapter maps by enum name) and the demo's weapons are 1 pistol
+      (PIST1.png), 2 machine gun (MCGUN1.png), 3 shotgun (Sgun.png),
+      each with its own cooldown (0.40 / 0.15 / 0.90 s) and damage
+      (1 / 1 / 2). A shot starts the sheet's fire sequence and returns
+      to the idle frame. Honest asset finding: the nominal grids do
+      not align with the artwork — an even split cut guns in half —
+      so the loader now detects each pose's content rectangle from
+      background-masked connected components (>=2000 px), bands them
+      into rows by vertical proximity, orders them row-major and
+      verifies the count. Measured: PIST1 4 poses in 2 rows, MCGUN1
+      4 in 2 rows, Sgun 16 in 5 rows (the lower rows are reload hands
+      and loose shells, so only its 4-pose firing row is wired);
+      PIST2 was inspected (5 poses in 2 rows) but is not wired, since
+      PIST1 supplies the pistol. The chroma key samples the sheet's
+      corner color (blue 91,110,225 for PIST1/MCGUN1, purple
+      86,82,167 for Sgun), fails loudly if the corners disagree, and
+      skips background texels within squared distance 2500 at draw
+      time. Frames are scaled by one shared factor (the median frame
+      height) and anchored on the grip's horizontal centre, so a
+      muzzle flash grows upward instead of shifting the gun. Enemies
+      now chase the player from spawn on their four walk frames
+      (per-axis collision sliding), switch to their two attack frames
+      inside 1.2 cells and deal 10 damage every 0.8 s attack cycle;
+      the player starts at 100 HP (a small red bar at the top left
+      shows the remainder) and death prints "You died." and closes
+      the window. --weapon N (a validation aid) picks the starting
+      weapon. Runtime-validated: build 0 errors; PIST1/MCGUN1/Sgun
+      report 4/4/4 frames; ~59 fps at 480x320 (475 frames in 8 s);
+      --autofire wins with each of --weapon 0, 1 and 2 (four
+      "Enemy defeated" reports and the win message); a passive run
+      takes ten 10-damage hits (100 to 0 HP) and prints "You died."
+      cleanly. The number-key presses themselves cannot be exercised
+      headlessly; their mapping is the existing name-based Silk
+      lookup with the new enum members.
 
 # PLANNED FOLLOW-UPS (NOT STARTED)
 
