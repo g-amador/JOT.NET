@@ -800,10 +800,25 @@ static FrameRect[] FindGunFrames(
 
             ++count;
 
-            if (x < x0) x0 = x;
-            if (x > x1) x1 = x;
-            if (y < y0) y0 = y;
-            if (y > y1) y1 = y;
+            if (x < x0)
+            {
+                x0 = x;
+            }
+
+            if (x > x1)
+            {
+                x1 = x;
+            }
+
+            if (y < y0)
+            {
+                y0 = y;
+            }
+
+            if (y > y1)
+            {
+                y1 = y;
+            }
 
             for (var dy = -1; dy <= 1; ++dy)
             {
@@ -861,7 +876,7 @@ static FrameRect[] FindGunFrames(
 
         if (rows.Count == 0 || centre - bandMaxCentre > rowGap)
         {
-            rows.Add(new List<(int, int, int, int, int)>());
+            rows.Add([]);
 
             bandMaxCentre = centre;
         }
@@ -1360,7 +1375,7 @@ void RenderFrame()
 
             "Dying" => enemyDeathFrames[enemy.DeathFrame],
 
-            "Dead" => enemyDeathFrames[enemyDeathFrames.Length - 1],
+            "Dead" => enemyDeathFrames[^1],
 
             "Attack" => enemyAttackFrames[
                 (int)(enemy.StateTimer / 0.4)
